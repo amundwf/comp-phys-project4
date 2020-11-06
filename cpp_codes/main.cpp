@@ -1,3 +1,4 @@
+#include <armadillo>
 #include <iostream>
 #include <cmath>
 #include "utils.hpp"

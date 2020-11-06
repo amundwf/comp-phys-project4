@@ -8,7 +8,7 @@ run:
 
 
 
-all_testing: compile_test run_test
+all_testing: compile_testing run_testing
 
 compile_testing:
 	g++ -O3 -o testing.out testing.cpp utils.cpp ising_solver.cpp -larmadillo

@@ -15,3 +15,11 @@ void writeIntegerMatrixToCSV(imat spinMatrix, string filename, string directory)
     // Save the matrix in CSV format in the specified directory:
     spinMatrix.save(csv_name(filePath));
 }
+
+
+void run_4c_ising(){
+    int L = 2; // 2x2 spin system
+    double J = 1;
+    IsingSolver isingSolver2x2(L, J); // Generates a random 2x2 spin state.
+
+}

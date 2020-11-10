@@ -8,7 +8,7 @@ using namespace arma;
 
 int main(){
    
-    //run_4c();
+    //run_4c_ising();
 
     return 0;
 }

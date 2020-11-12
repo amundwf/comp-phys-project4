@@ -10,7 +10,7 @@ int main(){
     
     //unit_testing_2x2();
 
-    //run_4c_ising();
+    run_4c_ising();
 
     return 0;
 }

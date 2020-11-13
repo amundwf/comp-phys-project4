@@ -142,6 +142,24 @@ void IsingSolver::print_E_list_and_M_list(){
     E_M_array.print("E_list and M_list:");
 }
 
+mat IsingSolver::get_E_list_and_M_list(){
+    // This function prints E_list and M_list in an array with two columns.
+    vec MC_list = vec(N_MC+1);
+    for (int i=1; i<=N_MC; i++){
+        MC_list(i-1) = i;
+    }
+
+    vec M_list_double = conv_to<vec>::from(M_list); // Convert M_list to double vector
+    // Paste E_list and M_list together in an array with two columns:
+    mat E_M_array = mat(N_MC+1, 3, fill::zeros);
+
+    E_M_array(span(0,N_MC), 0) = MC_list;
+    E_M_array(span(0,N_MC), 1) = E_list; // Energy in first column
+    E_M_array(span(0,N_MC), 2) = M_list_double; // Magnetisation in second column
+    // Print the array:
+    return E_M_array;
+}
+
 int IsingSolver::calculate_M(){
 	int M = 0; // The magnetization.
 	for (int i=0; i<=L-1; i++){

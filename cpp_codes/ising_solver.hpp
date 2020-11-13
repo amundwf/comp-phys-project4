@@ -53,6 +53,7 @@ public:
     void print_spinMatrix();
     void print_PBCSpinMatrix();
     void print_E_list_and_M_list();
+    arma::mat get_E_list_and_M_list();
 
     // Running the metropolis algorithm:
     void metropolis_one_time(); // Run the Metropolis algorithm one time (one MC cycle?)

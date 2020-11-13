@@ -103,7 +103,7 @@ void unit_testing_2x2(){
 void run_4c_ising(){
     int L = 2; // 2x2 spin system
     // (Just some random test values at first when testing):
-    int N_MC = 10000; //int N_MC = 10;
+    int N_MC = 100000; //int N_MC = 10;
     // Choose the temperature value to run the Metropolis algorithm for:
     double T = 1;
 
@@ -137,13 +137,10 @@ void run_4c_ising(){
     //isingSolver2x2.print_E_list_and_M_list();
     //imat results_EVs = isingSolver2x2.get_spinMatrix();
 
-    
-
-
     // Results matrix: First column: TList (all values of temperature). Second, third
     // and all subsequent columns: <E>, <M>, C_V, chi, ... (for the corresponding 
     // values of T).
-    mat results = isingSolver2x2.get_E_list_and_M_list();
+    mat results = isingSolver2x2.get_results_matrix();
 
     // Save results matrix, with a header:
     //(Do something like this, from utils.cpp from project 3?: )

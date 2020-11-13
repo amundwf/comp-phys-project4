@@ -106,8 +106,15 @@ IsingSolver::IsingSolver(int L, double T, int N_MC){
 
     // Instantiate E_list and M_list:
     E_list = vec(N_MC+1, fill::zeros); M_list = Col<int>(N_MC+1, fill::zeros);
+
+    // Initialise E2_list and M2_list:
+    E2_list = vec(N_MC+1, fill::zeros); M2_list = vec(N_MC+1, fill::zeros);
+    Mabs_list = vec(N_MC+1, fill::zeros);
     // Add E and M to the first elements in their lists (as function of MC cycles):
     E_list(0) = E; M_list(0) = M;
+    E2_list(0) = E*E; M2_list(0) = M*M;
+    Mabs_list(0) = fabs(M);
+
 }
 
 
@@ -142,20 +149,23 @@ void IsingSolver::print_E_list_and_M_list(){
     E_M_array.print("E_list and M_list:");
 }
 
-mat IsingSolver::get_E_list_and_M_list(){
+mat IsingSolver::get_results_matrix(){
     // This function prints E_list and M_list in an array with two columns.
     vec MC_list = vec(N_MC+1);
-    for (int i=1; i<=N_MC; i++){
-        MC_list(i-1) = i;
+    for (int i=0; i<=N_MC; i++){
+        MC_list(i) = i;
     }
 
     vec M_list_double = conv_to<vec>::from(M_list); // Convert M_list to double vector
     // Paste E_list and M_list together in an array with two columns:
-    mat E_M_array = mat(N_MC+1, 3, fill::zeros);
+    mat E_M_array = mat(N_MC+1, 6, fill::zeros);
 
     E_M_array(span(0,N_MC), 0) = MC_list;
-    E_M_array(span(0,N_MC), 1) = E_list; // Energy in first column
-    E_M_array(span(0,N_MC), 2) = M_list_double; // Magnetisation in second column
+    E_M_array(span(0,N_MC), 1) = E_list; 
+    E_M_array(span(0,N_MC), 2) = E2_list;
+    E_M_array(span(0,N_MC), 3) = M_list_double;
+    E_M_array(span(0,N_MC), 4) = M2_list;
+    E_M_array(span(0,N_MC), 5) = Mabs_list;
     // Print the array:
     return E_M_array;
 }
@@ -253,6 +263,7 @@ void IsingSolver::run_metropolis_full(){
         
         // Add the new energy and magnetisation to the lists of E and M (as
         // functions of # MC cycles):
-        E_list(i) = E; M_list(i) = M;
+        E_list(i) = E; M_list(i) = M; E2_list(i) = E*E; M2_list(i) = M*M;
+        Mabs_list(i)= fabs(M);
     }
 }

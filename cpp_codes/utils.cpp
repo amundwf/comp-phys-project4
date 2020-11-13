@@ -103,7 +103,7 @@ void unit_testing_2x2(){
 void run_4c_ising(){
     int L = 2; // 2x2 spin system
     // (Just some random test values at first when testing):
-    int N_MC = 1; //int N_MC = 10;
+    int N_MC = 100000; //int N_MC = 10;
     // Choose the temperature value to run the Metropolis algorithm for:
     double T = 1;
 
@@ -137,19 +137,20 @@ void run_4c_ising(){
     //isingSolver2x2.print_E_list_and_M_list();
     //imat results_EVs = isingSolver2x2.get_spinMatrix();
 
-    
-
-
     // Results matrix: First column: TList (all values of temperature). Second, third
     // and all subsequent columns: <E>, <M>, C_V, chi, ... (for the corresponding 
     // values of T).
-    //mat results = 
+    mat results = isingSolver2x2.get_results_matrix();
 
     // Save results matrix, with a header:
     //(Do something like this, from utils.cpp from project 3?: )
     //field<string> header(n_columns);
     //header(0) = "T"; header(1) = "E_mean"; header(2) = "M_mean"; header(3) = "C_V"; header(4) = "chi";
     //writeGeneralMatrixToCSV(results, header, filename, directory);
+
+    field<string> header(results.n_cols);
+    header(0) = "MC_cycle"; header(1) = "E_mean"; header(2) = "M_mean"; //header(3) = "C_V"; header(4) = "chi";
+    writeGeneralMatrixToCSV(results, header, filename, directory);
 
 }
 
@@ -193,3 +194,14 @@ void run_4f(){
 
 }
 */
+
+void writeGeneralMatrixToCSV(mat results, field<string> columnLabels, string filename, string directory){
+    // columnLabels contains the labels of the columns, e.g. "t", "x", "y", "z" or "t", "L".
+    // It should have the same amount of elements as 'results' has columns.
+    ofstream ofile;
+    string filePath = directory + filename;
+
+    // Save matrix in CSV format with the column labels in the header:
+    //results.save(csv_name("results.csv", header));
+    results.save(csv_name(filePath, columnLabels));
+}

@@ -30,6 +30,9 @@ private:
     double M_mean;  // The mean net magnetization of the system.
     double C_v;     // The specific heat of the system.
     double chi;     // The susceptibility of the system.
+    arma::vec E2_list;
+    arma::vec M2_list;
+    arma::vec Mabs_list;
 
     arma::imat spinMatrix;  // This is the spins.
     arma::imat PBC_spinMatrix; // N+2 x N+2 matrix (containing periodic boundary
@@ -53,6 +56,7 @@ public:
     void print_spinMatrix();
     void print_PBCSpinMatrix();
     void print_E_list_and_M_list();
+    arma::mat get_results_matrix();
 
     // Running the metropolis algorithm:
     void metropolis_one_time(); // Run the Metropolis algorithm one time (one MC cycle?)

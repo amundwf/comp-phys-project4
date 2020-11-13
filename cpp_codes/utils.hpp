@@ -8,6 +8,8 @@
 
 void writeIntegerMatrixToCSV(arma::imat spinMatrix, std::string filename, std::string directory);
 
+void writeGeneralMatrixToCSV(arma::mat results, arma::field<std::string> columnLabels, std::string filename, std::string directory);
+
 int randrange_int(int a, int b);
 
 double randrange_float(double a, double b);

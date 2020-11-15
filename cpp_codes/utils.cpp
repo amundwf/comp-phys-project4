@@ -103,7 +103,7 @@ void unit_testing_2x2(){
 void run_4c_ising(){
     int L = 2; // 2x2 spin system
     // (Just some random test values at first when testing):
-    int N_MC = 100;
+    int N_MC = 1000;
     // Choose the temperature value to run the Metropolis algorithm for:
     double T = 1;
 

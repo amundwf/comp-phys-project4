@@ -67,7 +67,7 @@ IsingSolver::IsingSolver(imat spinMatrix, double T, int N_MC){
 	M = calculate_M();
 
     // Instantiate E_list and M_list:
-    E_list = vec(N_MC+1, fill::zeros); M_list = Col<int>(N_MC+1, fill::zeros);
+    E_list = vec(N_MC+1, fill::zeros); M_list = vec(N_MC+1, fill::zeros);
     // Add E and M to the first elements in their lists (as function of MC cycles):
     E_list(0) = E; M_list(0) = M;
 }
@@ -105,18 +105,16 @@ IsingSolver::IsingSolver(int L, double T, int N_MC){
 	M = calculate_M();
 
     // Instantiate E_list and M_list:
-    E_list = vec(N_MC+1, fill::zeros); M_list = Col<int>(N_MC+1, fill::zeros);
+    E_list = vec(N_MC+1, fill::zeros); M_list = vec(N_MC+1, fill::zeros);
 
     // Initialise E2_list and M2_list:
     E2_list = vec(N_MC+1, fill::zeros); M2_list = vec(N_MC+1, fill::zeros);
-    Mabs_list = vec(N_MC+1, fill::zeros);
+    M_abs_list = vec(N_MC+1, fill::zeros);
     // Add E and M to the first elements in their lists (as function of MC cycles):
     E_list(0) = E; M_list(0) = M;
     E2_list(0) = E*E; M2_list(0) = M*M;
-    Mabs_list(0) = fabs(M);
-
+    M_abs_list(0) = fabs(M);
 }
-
 
 imat IsingSolver::get_spinMatrix(){
     return spinMatrix;
@@ -142,14 +140,13 @@ void IsingSolver::print_E_list_and_M_list(){
     //E_list.print();
     //M_list_double.print();
     
-    
     E_M_array(span(0,N_MC), 0) = E_list; // Energy in first column
     E_M_array(span(0,N_MC), 1) = M_list_double; // Magnetisation in second column
     // Print the array:
     E_M_array.print("E_list and M_list:");
 }
 
-mat IsingSolver::get_results_matrix(){
+mat IsingSolver::get_E_list_M_list(){
     // This function prints E_list and M_list in an array with two columns.
     vec MC_list = vec(N_MC+1);
     for (int i=0; i<=N_MC; i++){
@@ -162,10 +159,10 @@ mat IsingSolver::get_results_matrix(){
 
     E_M_array(span(0,N_MC), 0) = MC_list;
     E_M_array(span(0,N_MC), 1) = E_list; 
-    E_M_array(span(0,N_MC), 2) = E2_list;
-    E_M_array(span(0,N_MC), 3) = M_list_double;
+    E_M_array(span(0,N_MC), 2) = M_list_double;
+    E_M_array(span(0,N_MC), 3) = E2_list;
     E_M_array(span(0,N_MC), 4) = M2_list;
-    E_M_array(span(0,N_MC), 5) = Mabs_list;
+    E_M_array(span(0,N_MC), 5) = M_abs_list;
     // Print the array:
     return E_M_array;
 }
@@ -222,6 +219,41 @@ double IsingSolver::calculate_E(){
 	return E;
 }
 
+void IsingSolver::calculate_mean_results(){
+    // Calculates E_mean, M_mean, C_V from E_list and M_list and
+    // updates these member variables.
+    
+    // Discard the first 10% of the MC cycles (to reach the most likely state
+    // before including the values of E and M in their mean values):
+    int N_start = round(double(N_MC)/10);
+    vec E_list_shortened = E_list(span(N_start, N_MC));
+    vec M_list_shortened = M_list(span(N_start, N_MC));
+    vec E2_list_shortened = E2_list(span(N_start, N_MC));
+    vec M2_list_shortened = M2_list(span(N_start, N_MC));
+    vec M_abs_list_shortened = M_abs_list(span(N_start, N_MC));
+
+    // Now calculate the mean values of these lists:
+    E_mean = mean(E_list_shortened);
+    M_mean = mean(M_list_shortened);
+    double E2_mean = mean(E2_list_shortened);
+    double M2_mean = mean(M2_list_shortened);
+    M_abs_mean = mean(M_abs_list_shortened);
+    // Heat capacity:
+    C_V = (1/(kB*T*T))*(E2_mean - E_mean*E_mean);
+    // Susceptibility:
+    chi = (1/(kB*T))*(M2_mean - M_mean*M_mean);
+}
+
+Row<double> IsingSolver::get_mean_results(){
+    // Returns all four quantities that are based on mean values: <E>, <M>,
+    // C_V and chi.
+    Row<double> MVs_array(5); // MV = mean value
+    MVs_array(0) = E_mean; MVs_array(1) = M_mean; MVs_array(2) = M_abs_mean;
+    MVs_array(3) = C_V; MVs_array(4) = chi;
+
+    return MVs_array;
+}
+
 void IsingSolver::metropolis_one_time(){
     // This function runs the Metropolis algorithm one time (one MC cycle?)
     // (See the metropolis algorithm implementation in the lecture notes p. 438)
@@ -264,6 +296,10 @@ void IsingSolver::run_metropolis_full(){
         // Add the new energy and magnetisation to the lists of E and M (as
         // functions of # MC cycles):
         E_list(i) = E; M_list(i) = M; E2_list(i) = E*E; M2_list(i) = M*M;
-        Mabs_list(i)= fabs(M);
+        M_abs_list(i)= fabs(M);
     }
+
+    // Now that the metropolis algorithm has been run, calculate
+    // and update the expectated value quantities:
+    calculate_mean_results();
 }

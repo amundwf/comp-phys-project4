@@ -311,12 +311,7 @@ void IsingSolver::run_metropolis_full(){
         // functions of # MC cycles):
         E_list(i) = E; M_list(i) = M; E2_list(i) = E*E; M2_list(i) = M*M;
         M_abs_list(i)= fabs(M);
-
-        cout << M2_list(i) << endl;
     }
-
-    M_list.print();
-    M2_list.print();
 
     // Now that the metropolis algorithm has been run, calculate
     // and update the expectated value quantities:

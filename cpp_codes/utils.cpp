@@ -103,7 +103,7 @@ void unit_testing_2x2(){
 void run_4c_ising(){
     int L = 2; // 2x2 spin system
     // (Just some random test values at first when testing):
-    int N_MC = 1e2;//5e5;
+    int N_MC = 1e4;//5e5;
     // Choose the temperature value to run the Metropolis algorithm for:
     double T = 1;
 
@@ -121,7 +121,6 @@ void run_4c_ising(){
 
     // Results matrix containing E_list, M_list, E2_list, M2_list, M_abs_list:
     mat results_E_M = isingSolver2x2.get_E_list_M_list();
-    results_E_M.print("results_E_M (utils.cpp): (N_MC, E, E^2, M, M_abs, M^2)");
 
     // Mean values results matrix, containing <E>, <M>, C_V, chi:
     mat results_MVs = isingSolver2x2.get_mean_results();

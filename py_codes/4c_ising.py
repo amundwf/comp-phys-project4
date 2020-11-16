@@ -13,7 +13,7 @@ import re
 import os
 import utils as ut
 
-runCppCode = 0
+runCppCode = 1
 # Set to false if you have the results files and just want to plot the results.
 if runCppCode == True: 
     # Compile and run the C++ files (this is exactly what is in the makefile):

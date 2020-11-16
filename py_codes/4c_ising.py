@@ -46,23 +46,23 @@ E2_list = data["E2"]
 M2_list = data["M2"]
 M_abs_list = data["M_abs"]
 
-'''
 # Mean value quantities:
 filename = "4c_MVs.csv"
 filePath = os.path.join(directory, filename)
 data = np.loadtxt(filePath, skiprows=1, delimiter=",")
-data = pd.DataFrame(data, columns=["E_mean", "M_mean", "M_abs_mean", "C_V", "chi"])
-E_mean = data["E_mean"]
-M_mean = data["M_mean"]
-M_abs_mean = data["M_abs_mean"]
-C_V = data["C_V"]
-chi = data["chi"]
+data = pd.DataFrame([data], columns=["E_mean", "M_mean", "M_abs_mean", "C_V", "chi"])
+E_mean = (data["E_mean"])[0]
+M_mean = (data["M_mean"])[0]
+M_abs_mean = (data["M_abs_mean"])[0]
+C_V = (data["C_V"])[0]
+chi = (data["chi"])[0]
 
+print(); print("Mean value quantities:")
 print("E_mean: ", E_mean)
 print("M_mean: ", M_mean)
+print("M_abs_mean: ", M_abs_mean)
 print("C_V: ", C_V)
 print("chi: ", chi)
-'''
 
 
 

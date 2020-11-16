@@ -103,7 +103,7 @@ void unit_testing_2x2(){
 void run_4c_ising(){
     int L = 2; // 2x2 spin system
     // (Just some random test values at first when testing):
-    int N_MC = 1000;
+    int N_MC = 1e2;//5e5;
     // Choose the temperature value to run the Metropolis algorithm for:
     double T = 1;
 
@@ -121,15 +121,10 @@ void run_4c_ising(){
 
     // Results matrix containing E_list, M_list, E2_list, M2_list, M_abs_list:
     mat results_E_M = isingSolver2x2.get_E_list_M_list();
+    results_E_M.print("results_E_M (utils.cpp): (N_MC, E, E^2, M, M_abs, M^2)");
 
     // Mean values results matrix, containing <E>, <M>, C_V, chi:
     mat results_MVs = isingSolver2x2.get_mean_results();
-
-    // Save results matrix, with a header:
-    //(Do something like this, from utils.cpp from project 3?: )
-    //field<string> header(n_columns);
-    //header(0) = "T"; header(1) = "E_mean"; header(2) = "M_mean"; header(3) = "C_V"; header(4) = "chi";
-    //writeGeneralMatrixToCSV(results, header, filename, directory);
 
     // Save the results:
     // The results directory (the saving location of the results):
@@ -138,17 +133,19 @@ void run_4c_ising(){
     // of MC cycles:
     string filename = "4c_E_list_M_list.csv";
     field<string> header(results_E_M.n_cols);
-    header(0) = "MC_cycle"; header(1) = "E"; header(2) = "M";
-    header(3) = "E^2"; header(4) = "M^2"; header(5) = "M_abs";
+    header(0) = "MC_cycle"; header(1) = "E"; header(2) = "E^2";
+    header(3) = "M"; header(4) = "M_abs"; header(5) = "M^2";
     writeGeneralMatrixToCSV(results_E_M, header, filename, directory);
 
     // Now save the results of the mean value quantities:
     string filenameMVs = "4c_MVs.csv";
     field<string> headerMVs(results_MVs.n_cols);
-    headerMVs(0) = "E_mean"; headerMVs(1) = "M_mean"; headerMVs(2) = "M_abs_mean";
-    headerMVs(3) = "C_V"; headerMVs(4) = "chi";
+    headerMVs(0) = "E_mean"; headerMVs(1) = "E2_mean";
+    headerMVs(2) = "M_mean"; headerMVs(3) = "M_abs_mean"; headerMVs(4) = "M2_mean";
+    headerMVs(5) = "C_V"; headerMVs(6) = "chi";
     writeGeneralMatrixToCSV(results_MVs, headerMVs, filenameMVs, directory);
 }
+
 
 /* // 4f: Multiple values of T.
 void run_4f(){

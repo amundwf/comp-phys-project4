@@ -11,8 +11,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import re
 import os
+import utils as ut
 
-runCppCode = False
+runCppCode = 0
 # Set to false if you have the results files and just want to plot the results.
 if runCppCode == True: 
     # Compile and run the C++ files (this is exactly what is in the makefile):
@@ -38,41 +39,80 @@ filename = "4c_E_list_M_list.csv"
 filePath = os.path.join(directory, filename) # The full file path.
 data = np.loadtxt(filePath, skiprows=1, delimiter=",")
 # Get the columns of data as lists:
-data = pd.DataFrame(data, columns=["MC_cycle", "E", "M", "E2", "M2", "M_abs"])
-MC_cycle_list = data["MC_cycle"]
-E_list = data["E"]
-M_list = data["M"]
-E2_list = data["E2"]
-M2_list = data["M2"]
-M_abs_list = data["M_abs"]
+data = pd.DataFrame(data, columns=["MC_cycle", "E", "E2", "M", "M_abs", "M2"])
+MC_cycle_list = data["MC_cycle"].tolist() # tolist() converts dataframe to a list.
+E_list = data["E"].tolist()
+E2_list = data["E2"].tolist()
+M_list = data["M"].tolist()
+M_abs_list = data["M_abs"].tolist()
+M2_list = data["M2"].tolist()
+
 
 # Mean value quantities:
 filename = "4c_MVs.csv"
 filePath = os.path.join(directory, filename)
 data = np.loadtxt(filePath, skiprows=1, delimiter=",")
-data = pd.DataFrame([data], columns=["E_mean", "M_mean", "M_abs_mean", "C_V", "chi"])
-E_mean = (data["E_mean"])[0]
-M_mean = (data["M_mean"])[0]
-M_abs_mean = (data["M_abs_mean"])[0]
-C_V = (data["C_V"])[0]
-chi = (data["chi"])[0]
+data = pd.DataFrame([data], columns=["E_mean", "E2_mean", "M_mean", "M_abs_mean", "M2_mean", "C_V", "chi"])
+E_mean = (data["E_mean"].tolist())[0]
+E2_mean = (data["E2_mean"].tolist())[0]
+M_mean = (data["M_mean"].tolist())[0]
+M_abs_mean = (data["M_abs_mean"].tolist())[0]
+M2_mean = (data["M2_mean"].tolist())[0]
+C_V = (data["C_V"].tolist())[0]
+chi = (data["chi"].tolist())[0]
 
-print(); print("Mean value quantities:")
+print(); print("Numerical mean value quantities:")
 print("E_mean: ", E_mean)
+print("E2_mean: ", E2_mean)
 print("M_mean: ", M_mean)
 print("M_abs_mean: ", M_abs_mean)
+print("M2_mean: ", M2_mean)
 print("C_V: ", C_V)
 print("chi: ", chi)
 
+print(); print("Analytical mean value quantities:")
+J = 1.0; kB = 1.0; T = 1.0
+E_mean_analytical = ut.E_mean_analytical_2x2(J, kB, T)
+E2_mean_analytical = ut.E2_mean_analytical_2x2(J, kB, T)
+M_abs_mean_analytical = ut.M_abs_mean_analytical_2x2(J, kB, T)
+M2_mean_analytical = ut.M2_mean_analytical_2x2(J, kB, T)
+C_V_analytical = ut.C_V_analytical_2x2(J, kB, T)
+chi_analytical = ut.chi_analytical_2x2(J, kB, T)
+print("E_mean: ", E_mean_analytical)
+print("E2_mean: ", E2_mean_analytical)
+print("M_mean: 0?")
+print("M_abs_mean: ", M_abs_mean_analytical)
+print("M2_mean: ", M2_mean_analytical)
+print("C_V: ", C_V_analytical)
+print("chi: ", chi_analytical)
 
 
-# if plotCodeWord == "E_list":
-# (plot M_list)
-plt.plot(MC_cycle_list, E_list)
+#plotCodeWord = "E_list"
+plotCodeWord = "M_list"
 
+labelSize = 13
+titleSize = 12
 
-# else if plotCodeWord == "M_list":
-# (plot E_list)
+if plotCodeWord == "E_list":
+    # Plot E_list
+    plt.plot(MC_cycle_list, E_list, '.', label='E_list', markersize=3)
+    # Plot the mean as well (as a straight horizontal line)
+    plt.plot([MC_cycle_list[0], MC_cycle_list[-1]], [E_mean, E_mean], 'r-', label='E_mean')
+    #plt.plot([MC_cycle_list[0], MC_cycle_list[-1]], [E_mean, E_mean])
+    plt.ylabel(r'$E$', fontsize=labelSize)
+    plt.suptitle('Energy of 2x2 spin system vs. Monte Carlo cycles', fontsize=titleSize)
 
+elif plotCodeWord == "M_list":
+    # Plot M_list
+    plt.plot(MC_cycle_list, M_list, '.')
+    plt.ylabel(r'$M$', fontsize=labelSize)
+    plt.suptitle('Magnetisation of 2x2 spin system vs. Monte Carlo cycles', fontsize=titleSize)
 
+plt.xlabel(r'Number of Monte Carlo cycles', fontsize=labelSize)
+
+#plt.xlim(-1.5, 1.5)
+#plt.ylim(-1.5, 1.5)
+#plt.axis('equal')
+plt.legend()
+plt.grid()
 plt.show()

@@ -67,9 +67,18 @@ IsingSolver::IsingSolver(imat spinMatrix, double T, int N_MC){
 	M = calculate_M();
 
     // Instantiate E_list and M_list:
-    E_list = vec(N_MC+1, fill::zeros); M_list = vec(N_MC+1, fill::zeros);
+    E_list = vec(N_MC+1, fill::zeros);
+    M_list = vec(N_MC+1, fill::zeros);
+    M_abs_list = vec(N_MC+1, fill::zeros);
+
+    // Initialise E2_list and M2_list:
+    E2_list = vec(N_MC+1, fill::zeros);
+    M2_list = vec(N_MC+1, fill::zeros);
+    
     // Add E and M to the first elements in their lists (as function of MC cycles):
     E_list(0) = E; M_list(0) = M;
+    E2_list(0) = E*E; M2_list(0) = M*M;
+    M_abs_list(0) = fabs(M);
 }
 
 // Constructor which initiates a random spin matrix:
@@ -105,11 +114,14 @@ IsingSolver::IsingSolver(int L, double T, int N_MC){
 	M = calculate_M();
 
     // Instantiate E_list and M_list:
-    E_list = vec(N_MC+1, fill::zeros); M_list = vec(N_MC+1, fill::zeros);
+    E_list = vec(N_MC+1, fill::zeros);
+    M_list = vec(N_MC+1, fill::zeros);
+    M_abs_list = vec(N_MC+1, fill::zeros);
 
     // Initialise E2_list and M2_list:
-    E2_list = vec(N_MC+1, fill::zeros); M2_list = vec(N_MC+1, fill::zeros);
-    M_abs_list = vec(N_MC+1, fill::zeros);
+    E2_list = vec(N_MC+1, fill::zeros);
+    M2_list = vec(N_MC+1, fill::zeros);
+    
     // Add E and M to the first elements in their lists (as function of MC cycles):
     E_list(0) = E; M_list(0) = M;
     E2_list(0) = E*E; M2_list(0) = M*M;
@@ -158,12 +170,13 @@ mat IsingSolver::get_E_list_M_list(){
     mat E_M_array = mat(N_MC+1, 6, fill::zeros);
 
     E_M_array(span(0,N_MC), 0) = MC_list;
-    E_M_array(span(0,N_MC), 1) = E_list; 
-    E_M_array(span(0,N_MC), 2) = M_list_double;
-    E_M_array(span(0,N_MC), 3) = E2_list;
-    E_M_array(span(0,N_MC), 4) = M2_list;
-    E_M_array(span(0,N_MC), 5) = M_abs_list;
-    // Print the array:
+    E_M_array(span(0,N_MC), 1) = E_list;
+    E_M_array(span(0,N_MC), 2) = E2_list;
+    E_M_array(span(0,N_MC), 3) = M_list_double;
+    E_M_array(span(0,N_MC), 4) = M_abs_list;
+    E_M_array(span(0,N_MC), 5) = M2_list;
+    
+    // Return the array:
     return E_M_array;
 }
 
@@ -235,21 +248,22 @@ void IsingSolver::calculate_mean_results(){
     // Now calculate the mean values of these lists:
     E_mean = mean(E_list_shortened);
     M_mean = mean(M_list_shortened);
-    double E2_mean = mean(E2_list_shortened);
-    double M2_mean = mean(M2_list_shortened);
+    E2_mean = mean(E2_list_shortened);
+    M2_mean = mean(M2_list_shortened);
     M_abs_mean = mean(M_abs_list_shortened);
     // Heat capacity:
     C_V = (1/(kB*T*T))*(E2_mean - E_mean*E_mean);
     // Susceptibility:
-    chi = (1/(kB*T))*(M2_mean - M_mean*M_mean);
+    chi = (1/(kB*T))*(M2_mean - M_abs_mean*M_abs_mean);
 }
 
 Row<double> IsingSolver::get_mean_results(){
     // Returns all four quantities that are based on mean values: <E>, <M>,
     // C_V and chi.
-    Row<double> MVs_array(5); // MV = mean value
-    MVs_array(0) = E_mean; MVs_array(1) = M_mean; MVs_array(2) = M_abs_mean;
-    MVs_array(3) = C_V; MVs_array(4) = chi;
+    Row<double> MVs_array(7); // MV = mean value
+    MVs_array(0) = E_mean; MVs_array(1) = E2_mean;
+    MVs_array(2) = M_mean; MVs_array(3) = M_abs_mean; MVs_array(4) = M2_mean;
+    MVs_array(5) = C_V; MVs_array(6) = chi;
 
     return MVs_array;
 }
@@ -297,7 +311,12 @@ void IsingSolver::run_metropolis_full(){
         // functions of # MC cycles):
         E_list(i) = E; M_list(i) = M; E2_list(i) = E*E; M2_list(i) = M*M;
         M_abs_list(i)= fabs(M);
+
+        cout << M2_list(i) << endl;
     }
+
+    M_list.print();
+    M2_list.print();
 
     // Now that the metropolis algorithm has been run, calculate
     // and update the expectated value quantities:

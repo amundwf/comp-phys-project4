@@ -34,8 +34,10 @@ private:
 
     // Quantities based on expected values:
     double E_mean;  // The mean energy of the system over the Monte Carlo cycles.
+    double E2_mean; // The mean of E^2.
     double M_mean;  // The mean net magnetization of the system.
-    double M_abs_mean; // // The mean net absolute value of the magnetization of the system.
+    double M_abs_mean; // The mean net absolute value of the magnetization of the system.
+    double M2_mean; // The mean of M^2.
     double C_V;     // The specific heat of the system.
     double chi;     // The susceptibility of the system.
     

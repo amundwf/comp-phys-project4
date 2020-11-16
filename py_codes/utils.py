@@ -90,5 +90,14 @@ def plot_E_and_M():
     f.suptitle("Expectation values for {} Monte Carlo cycles for a 2x2 spin matrix".format(N_MC))
     
     
-    
-plot_E_and_M()
+def E_mean_analytical_2x2(J, kB, T):
+    beta = 1/(kB*T)
+    x = 8*J*beta
+    E_mean = -8*J*np.sinh(x)/(np.cosh(x)+3)
+    return E_mean
+
+def M_abs_mean_analytical_2x2(J, kB, T):
+    beta = 1/(kB*T)
+    x = 8*J*beta
+    M_abs_mean = -8*np.sinh(x)/(np.cosh(x)+3)
+    return M_abs_mean

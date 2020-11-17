@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size': 12})
 import pandas as pd
+import os
 
 def energy_EV_analytical_2x2(T, J, kB):
     # Returns the analytical expectation value for the 2x2 case,
@@ -40,7 +41,7 @@ def plot_spinMatrix(spinMatrix):
     # black for values below 1 and white for values >= 1.
     plt.show()
 
-def plot_E_and_M():
+def plot_each_cycle():
     
     directory = "../results/4c_ising/"
     filename = "blabla_4c.csv"
@@ -90,5 +91,50 @@ def plot_E_and_M():
     f.suptitle("Expectation values for {} Monte Carlo cycles for a 2x2 spin matrix".format(N_MC))
     
     
+def plot_each_temperature():
+        
+    directory = "C:/github/Ising/"
+    i = 0
+    f = plt.figure(figsize=(18, 10), dpi=80, facecolor='w', edgecolor='k')
+    for filename in os.listdir(directory):
+            if filename.endswith(".csv"):
     
-plot_E_and_M()
+                data = np.loadtxt(directory + filename, skiprows=1, delimiter=",")
+                data = pd.DataFrame(data, columns=["Empty", "T", "E", "M", "CV", "Susc"])
+                
+                L = [40, 60, 80, 100]
+                T = data["T"]
+                E = data["E"]
+                M = data["M"]
+                CV = data["CV"]
+                chi = data["Susc"]
+                
+                plt.subplot(221)
+                plt.plot(T, E, '.-', label="{}".format(L[i]))
+                plt.xlabel("Temperature")
+                plt.ylabel("Expectation Energy")
+                plt.legend()
+                
+                plt.subplot(222)
+                plt.plot(T, M, '.-', label="{}".format(L[i]))
+                plt.xlabel("Temperature")
+                plt.ylabel("Expectation Magnetisation")
+                plt.legend()
+                
+                plt.subplot(223)
+                plt.plot(T, CV , '.-', label="{}".format(L[i]))
+                plt.xlabel("Temperature")
+                plt.ylabel("Specific Heat")
+                plt.legend()
+                
+                plt.subplot(224)
+                plt.plot(T, chi , '.-', label="{}".format(L[i]))
+                plt.xlabel("Temperature")
+                plt.ylabel("Magnetic Susceptibility")
+                plt.legend()
+                
+                f.suptitle("Expectation values for 100,000 Monte Carlo cycles for a 2x2 spin matrix. An additional 10% were added for equilibrium")
+                i += 1
+    plt.savefig(directory + "Ising_100,000.png")
+                
+plot_each_temperature()        

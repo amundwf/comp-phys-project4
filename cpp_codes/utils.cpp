@@ -228,8 +228,24 @@ void run_4f(){
     // Set the temperature steps.
     double Tstart = 2.1;
     double Tend = 2.4;
-    double Tsteps = 8;
+    double Tsteps = 16;
     double T_step_length = (Tend - Tstart)/Tsteps;
+
+    // Make data into strings.
+        // Create an output string stream
+    std::ostringstream streamObj3;
+    // Set Fixed -Point Notation
+    streamObj3 << std::fixed;
+    // Set precision to 2 digits
+    streamObj3 << std::setprecision(1);
+    //Add double to stream
+    streamObj3 << Tstart;
+    // Get string from output string stream
+    std::string stringTstart = streamObj3.str();
+    streamObj3 << Tend;
+    std::string stringTend = streamObj3.str();
+    streamObj3 << Tsteps;
+    std::string stringTsteps = streamObj3.str();
 
     // Matrix for results.
     mat mean_value_results = zeros(Tsteps,8);
@@ -248,12 +264,20 @@ void run_4f(){
     # pragma omp parallel for default(shared) private (i)
     for (int i=0; i < int(Tsteps); i++){
         double T = T_schedule[i];
-        cout << "\nTemperature is:" << T << endl;
+        cout << "\nT is:" << T << endl;
         IsingSolver isingSolver20x20(L, T, N_MC);
         //initialise variables.
         isingSolver20x20.init_parallel_variables();
 
-        for (int n=1; n<=N_MC; n++){ // N_MC MC cycles
+        // Begin equilibrium cycles
+        for (int n=1; n<=int(N_MC*0.1); n++){ // N_MC MC cycles
+            // Run one MC cycle:
+            isingSolver20x20.metropolis_one_time_parallel();
+        }  
+        // Clear data.
+        isingSolver20x20.init_parallel_variables();
+
+        for (int n=int(N_MC*0.1); n<=N_MC; n++){ // N_MC MC cycles
             // Run one MC cycle:
             isingSolver20x20.metropolis_one_time_parallel();
         }  
@@ -267,11 +291,11 @@ void run_4f(){
     
     // Save the results.
     string directory = "../results/4d/";
-    string filename = "temp_range.csv";
+    string filename = stringTstart + "_" + stringTend + "_steps=" + stringTsteps + "_L=" + to_string(L) + "_N=" + to_string(N_MC) + ".csv";
     field<string> header(mean_value_results.n_cols);
-    header(0) = "E_mean"; header(1) = "E2_mean"; header(2) = "M_mean";
-    header(3) = "M_abs_mean"; header(4) = "M2_mean"; header(5) = "C_V";
-    header(6) = "chi";
+    header(1) = "E_mean"; header(2) = "E2_mean"; header(3) = "M_mean";
+    header(4) = "M_abs_mean"; header(5) = "M2_mean"; header(6) = "C_V";
+    header(7) = "chi"; header(0) = "Temperature";
     writeGeneralMatrixToCSV(mean_value_results, header, filename, directory);
 }
 

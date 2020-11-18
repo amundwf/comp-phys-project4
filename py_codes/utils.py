@@ -94,7 +94,6 @@ def plot_each_cycle():
     
     f.suptitle("Expectation values for {} Monte Carlo cycles for a 2x2 spin matrix".format(N_MC))
     '''
-plot_each_cycle()
 
 def Z_analytical_2x2(J, kB, T):
     # The analytical expression of Z for a 2x2 spin lattice.
@@ -102,7 +101,7 @@ def Z_analytical_2x2(J, kB, T):
     Z = 4*np.cosh(x) + 12
     return Z
     
-def plot_each_temperature():
+def plot_each_temperature_py():
         
     directory = "C:/github/Ising/"
     i = 0
@@ -147,7 +146,57 @@ def plot_each_temperature():
                 f.suptitle("Expectation values for 100,000 Monte Carlo cycles for a 2x2 spin matrix. An additional 10% were added for equilibrium")
                 i += 1
     plt.savefig(directory + "Ising_100,000.png")
-                      
+    
+def plot_each_temperature_cpp():
+        
+    directory = "../results/4d/"
+    filename = "temp_range.csv"
+    
+    f = plt.figure(figsize=(18, 10), dpi=80, facecolor='w', edgecolor='k')
+    
+    
+    data = np.loadtxt(directory + filename, skiprows=1, delimiter=",")
+    data = pd.DataFrame(data, columns=["T", "E_mean", "E2_mean", "M_mean", "M_abs_mean",
+                                       "M2_mean", "CV", "chi"])
+    
+    L = 20
+    L2 = 20*20
+    T = data["T"]
+    E = data["E_mean"]
+    M = data["M_mean"]
+    CV = data["CV"]
+    chi = data["chi"]
+    
+    plt.subplot(221)
+    plt.plot(T, E/L2, '.-', label="{}".format(L))
+    plt.xlabel("Temperature")
+    plt.ylabel("Expectation Energy")
+    plt.legend()
+    
+    plt.subplot(222)
+    plt.plot(T, M/L2, '.-', label="{}".format(L))
+    plt.xlabel("Temperature")
+    plt.ylabel("Expectation Magnetisation")
+    plt.legend()
+    
+    plt.subplot(223)
+    plt.plot(T, CV/L2 , '.-', label="{}".format(L))
+    plt.xlabel("Temperature")
+    plt.ylabel("Specific Heat")
+    plt.legend()
+    
+    plt.subplot(224)
+    plt.plot(T, chi/L2 , '.-', label="{}".format(L))
+    plt.xlabel("Temperature")
+    plt.ylabel("Magnetic Susceptibility")
+    plt.legend()
+    
+    #f.suptitle("Expectation values for 100,000 Monte Carlo cycles for a 2x2 spin matrix. An additional 10% were added for equilibrium")
+    f.tight_layout(pad=1.0)
+    plt.savefig(directory + "10^5cycles_temp_range.pdf")
+                 
+plot_each_temperature_cpp()
+     
 def E_mean_analytical_2x2(J, kB, T):
     beta = 1/float(kB*T)
     x = float(8*J*beta)

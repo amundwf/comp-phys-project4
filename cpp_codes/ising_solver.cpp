@@ -4,6 +4,7 @@
 #include <random>
 #include <time.h>
 
+
 using namespace std;
 using namespace arma;
 
@@ -53,6 +54,7 @@ IsingSolver::IsingSolver(imat spinMatrix, double T, int N_MC){
     this->spinMatrix = spinMatrix;
     this->T = T;
     this->N_MC = N_MC;
+    this->N_MC2 = N_MC*N_MC;
 
     L = spinMatrix.n_rows;
 
@@ -87,6 +89,7 @@ IsingSolver::IsingSolver(int L, double T, int N_MC){
     this->L = L;
     this->T = T;
     this->N_MC = N_MC;
+    this->N_MC2 = N_MC*N_MC;
 
     arma_rng::set_seed_random(); // Set seed to a random value.
 	mat randMatrix = randu(L,L); // Uniform random elements between 0 and 1.
@@ -381,4 +384,63 @@ void IsingSolver::run_metropolis_full(){
     // Now that the metropolis algorithm has been run, calculate
     // and update the expectated value quantities:
     calculate_mean_results();
+}
+
+void IsingSolver::init_parallel_variables(){
+    double E_mean, E2_mean, M_mean, M_abs_mean, M2_mean, C_V, chi;
+}
+
+
+void IsingSolver::metropolis_one_time_parallel(){
+    // Same as metropolis_one_time(), but this function also updates E, E2, M,
+    // etc. in E_list, E2_list, M_list, ... respectively, for one index value.
+    // int list_idx: Current list index of E_list, E2_list, etc. corresponding to
+    // the current MC cycle.
+    for (int y=0; y<=L-1; y++){ // Go through all spins (but pick a random position
+    // each time).
+        for (int x=0; x<=L-1; x++){
+            // Get a random position in the (PBC) lattice:
+            int iy = randrange_int(1, L);
+            int ix = randrange_int(1, L);
+
+            // Calculate the energy difference that would be caused by flipping
+            // the spin at matrix indices (iy,ix):
+            int dE = 2*PBC_spinMatrix(iy,ix)*
+                (PBC_spinMatrix(iy,ix-1) + PBC_spinMatrix(iy,ix+1)
+                + PBC_spinMatrix(iy-1,ix) + PBC_spinMatrix(iy+1,ix));
+                // ^ A sum over the four nearest neighbours.
+
+            // Now perform the Metropolis test using dE:
+            double w = weights(dE+8); // Get the weight corresponding to dE (without
+            // needing to calculate the exponential).
+            double randNum = randrange_float(0,1); // Uniformly random double between 0 and 1.
+            if (randNum <= w){ // If the weight is larger than the random number, the spin flip
+                // is acceptable. Therefore, perform the spin flip.
+                PBC_spinMatrix(iy,ix) *= -1; spinMatrix(iy-1,ix-1) *= -1; 
+                // Also update the energy and magnetisation:
+                E += dE;
+                M += 2*PBC_spinMatrix(iy,ix);
+            }
+        }
+    }
+    // Add the new energy and magnetisation to the lists of E and M (as
+    // functions of # MC cycles):
+    E_mean += E/double(N_MC); M_mean += M/double(N_MC); E2_mean += E*E/N_MC2; M2_mean += M*M/N_MC2;
+    M_abs_mean += abs(M)/double(N_MC);
+}
+
+Row<double> IsingSolver::get_mean_results_parallel(){
+    // Returns all four quantities that are based on mean values: <E>, <M>,
+    // C_V and chi.
+    
+    C_V = (1/(kB*T*T))*(E2_mean - E_mean*E_mean);
+    // Susceptibility:
+    chi = (1/(kB*T))*(M2_mean - M_abs_mean*M_abs_mean);
+
+    Row<double> MVs_array(7); // MV = mean value
+    MVs_array(0) = E_mean; MVs_array(1) = E2_mean;
+    MVs_array(2) = M_mean; MVs_array(3) = M_abs_mean; MVs_array(4) = M2_mean;
+    MVs_array(5) = C_V; MVs_array(6) = chi;
+
+    return MVs_array;
 }

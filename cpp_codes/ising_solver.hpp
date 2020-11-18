@@ -20,8 +20,9 @@ private:
     // so it is set to the type 'int'.
 
     int N_MC; // Chosen number of Monte Carlo cycles to run the metropolis algorithm.
-    double N_MC2; // N_MC squared. 
-
+    int N1_MC; // Equil. cycles subtracted. 
+    int N1_MC2; // N1_MC squared. 
+    
     // The solver needs to calculate these quantities:
     double E;       // The current energy of the system.
     int M;          // The current net magnetization M of the system.

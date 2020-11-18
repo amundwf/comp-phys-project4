@@ -54,7 +54,9 @@ IsingSolver::IsingSolver(imat spinMatrix, double T, int N_MC){
     this->spinMatrix = spinMatrix;
     this->T = T;
     this->N_MC = N_MC;
-    this->N_MC2 = N_MC*N_MC;
+    // Equilibrium cycles subtracted from full MC cycles.
+    this->N1_MC = (1-0.1)*N_MC;
+    this->N1_MC2 = N1_MC*N1_MC;
 
     L = spinMatrix.n_rows;
 
@@ -89,7 +91,9 @@ IsingSolver::IsingSolver(int L, double T, int N_MC){
     this->L = L;
     this->T = T;
     this->N_MC = N_MC;
-    this->N_MC2 = N_MC*N_MC;
+    // Equilibrium cycles subtracted from full MC cycles.
+    this->N1_MC = (1-0.1)*N_MC;
+    this->N1_MC2 = N1_MC*N1_MC;
 
     arma_rng::set_seed_random(); // Set seed to a random value.
 	mat randMatrix = randu(L,L); // Uniform random elements between 0 and 1.
@@ -387,9 +391,15 @@ void IsingSolver::run_metropolis_full(){
 }
 
 void IsingSolver::init_parallel_variables(){
-    double E_mean, E2_mean, M_mean, M_abs_mean, M2_mean, C_V, chi;
+    // Set all variables to zero. 
+    double E_mean = 0.0;
+    double E2_mean = 0.0;
+    double M_mean = 0.0;
+    double M_abs_mean = 0.;
+    double M2_mean = 0.0;
+    double C_V = 0.0; 
+    double chi = 0.0;
 }
-
 
 void IsingSolver::metropolis_one_time_parallel(){
     // Same as metropolis_one_time(), but this function also updates E, E2, M,
@@ -425,8 +435,8 @@ void IsingSolver::metropolis_one_time_parallel(){
     }
     // Add the new energy and magnetisation to the lists of E and M (as
     // functions of # MC cycles):
-    E_mean += E/double(N_MC); M_mean += M/double(N_MC); E2_mean += E*E/N_MC2; M2_mean += M*M/N_MC2;
-    M_abs_mean += abs(M)/double(N_MC);
+    E_mean += E/double(N1_MC); M_mean += M/double(N1_MC); E2_mean += E*E/double(N1_MC2); M2_mean += M*M/double(N1_MC2);
+    M_abs_mean += abs(M)/double(N1_MC);
 }
 
 Row<double> IsingSolver::get_mean_results_parallel(){

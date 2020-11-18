@@ -20,5 +20,6 @@ void unit_testing_2x2();
 
 void run_4c_ising();
 
+void run_4d_most_likely_state();
 
 #endif

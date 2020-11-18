@@ -10,7 +10,9 @@ int main(){
     
     //unit_testing_2x2();
 
-    run_4c_ising();
+    //run_4c_ising();
+
+    run_4d_most_likely_state();
 
     return 0;
 }

@@ -257,6 +257,33 @@ void IsingSolver::calculate_mean_results(){
     chi = (1/(kB*T))*(M2_mean - M_abs_mean*M_abs_mean);
 }
 
+void IsingSolver::calculate_mean_results_current_MC_cycle(int current_MC_cycle){
+    // Same as calculate_mean_results(), but now it includes all MC cycles,
+    // that is, it starts at N_start = 1, and only goes up to the current
+    // MC cycle. It does not discard the first 10% or so of the cycles.
+    // This is for testing purposes, to see when the spin system reaches
+    // an equilibrium.
+    // int current_MC_cycle: The number of the current MC cycle (1,2,...,N_MC).
+    int N_start = 0;
+    vec E_list_shortened = E_list(span(N_start, current_MC_cycle));
+    vec M_list_shortened = M_list(span(N_start, current_MC_cycle));
+    vec E2_list_shortened = E2_list(span(N_start, current_MC_cycle));
+    vec M2_list_shortened = M2_list(span(N_start, current_MC_cycle));
+    vec M_abs_list_shortened = M_abs_list(span(N_start, current_MC_cycle));
+
+    // Now calculate the mean values of these lists and update the member
+    // variables:
+    E_mean = mean(E_list_shortened);
+    M_mean = mean(M_list_shortened);
+    E2_mean = mean(E2_list_shortened);
+    M2_mean = mean(M2_list_shortened);
+    M_abs_mean = mean(M_abs_list_shortened);
+    // Heat capacity:
+    C_V = (1/(kB*T*T))*(E2_mean - E_mean*E_mean);
+    // Susceptibility:
+    chi = (1/(kB*T))*(M2_mean - M_abs_mean*M_abs_mean);
+}
+
 Row<double> IsingSolver::get_mean_results(){
     // Returns all four quantities that are based on mean values: <E>, <M>,
     // C_V and chi.
@@ -298,6 +325,44 @@ void IsingSolver::metropolis_one_time(){
             }
         }
     }
+}
+
+void IsingSolver::metropolis_one_time_and_update_E_M_lists(int list_idx){
+    // Same as metropolis_one_time(), but this function also updates E, E2, M,
+    // etc. in E_list, E2_list, M_list, ... respectively, for one index value.
+    // int list_idx: Current list index of E_list, E2_list, etc. corresponding to
+    // the current MC cycle.
+    for (int y=0; y<=L-1; y++){ // Go through all spins (but pick a random position
+    // each time).
+        for (int x=0; x<=L-1; x++){
+            // Get a random position in the (PBC) lattice:
+            int iy = randrange_int(1, L);
+            int ix = randrange_int(1, L);
+
+            // Calculate the energy difference that would be caused by flipping
+            // the spin at matrix indices (iy,ix):
+            int dE = 2*PBC_spinMatrix(iy,ix)*
+                (PBC_spinMatrix(iy,ix-1) + PBC_spinMatrix(iy,ix+1)
+                + PBC_spinMatrix(iy-1,ix) + PBC_spinMatrix(iy+1,ix));
+                // ^ A sum over the four nearest neighbours.
+
+            // Now perform the Metropolis test using dE:
+            double w = weights(dE+8); // Get the weight corresponding to dE (without
+            // needing to calculate the exponential).
+            double randNum = randrange_float(0,1); // Uniformly random double between 0 and 1.
+            if (randNum <= w){ // If the weight is larger than the random number, the spin flip
+                // is acceptable. Therefore, perform the spin flip.
+                PBC_spinMatrix(iy,ix) *= -1; spinMatrix(iy-1,ix-1) *= -1; 
+                // Also update the energy and magnetisation:
+                E += dE;
+                M += 2*PBC_spinMatrix(iy,ix);
+            }
+        }
+    }
+    // Add the new energy and magnetisation to the lists of E and M (as
+    // functions of # MC cycles):
+    E_list(list_idx) = E; M_list(list_idx) = M; E2_list(list_idx) = E*E; M2_list(list_idx) = M*M;
+    M_abs_list(list_idx)= fabs(M);
 }
 
 void IsingSolver::run_metropolis_full(){

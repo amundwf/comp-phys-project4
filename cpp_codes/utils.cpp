@@ -103,12 +103,18 @@ void unit_testing_2x2(){
 void run_4c_ising(){
     int L = 2; // 2x2 spin system
     // (Just some random test values at first when testing):
-    int N_MC = 1e4;//5e5;
+    int N_MC = 1e3;//
     // Choose the temperature value to run the Metropolis algorithm for:
     double T = 1;
 
+    imat spin_mat(L, L, fill::ones);
+    spin_mat(0,0) = 1; spin_mat(0,1) = 1;
+    spin_mat(1,0) = 1; spin_mat(1,1) = 1;
+
     // Make the Ising solver object (random 2x2 spin matrix):
-    IsingSolver isingSolver2x2(L, T, N_MC); // Generates a random 2x2 spin state.
+    //IsingSolver isingSolver2x2(L, T, N_MC); // Generates a random 2x2 spin state.
+    IsingSolver isingSolver2x2(spin_mat, T, N_MC);
+
 
     cout << "State before Metropolis:\n";
     isingSolver2x2.print_spinMatrix();
@@ -143,6 +149,66 @@ void run_4c_ising(){
     headerMVs(2) = "M_mean"; headerMVs(3) = "M_abs_mean"; headerMVs(4) = "M2_mean";
     headerMVs(5) = "C_V"; headerMVs(6) = "chi";
     writeGeneralMatrixToCSV(results_MVs, headerMVs, filenameMVs, directory);
+}
+
+void run_4d_most_likely_state(){
+    int L = 20; // 2x2 spin system
+    // (Just some random test values at first when testing):
+    int N_MC = 100;
+    // Choose the temperature value to run the Metropolis algorithm for:
+    double T = 1;
+
+    // Make the Ising solver object (random 20x20 spin matrix):
+    IsingSolver isingSolver20x20(L, T, N_MC); // Generates a random 2x2 spin state.
+
+    //cout << "State before Metropolis:\n";
+    //isingSolver20x20.print_spinMatrix();
+
+    // Run the metropolis algorithm, and for each MC cycle, calculate mean values
+    // and add them to a list. Then save the lists for plotting.
+    // Basically do the same thing as run_metropolis_full(), but now with updating
+    // and saving the mean values after each MC cycle (takes longer time).
+    // Create array to contain the mean values for all MC cycles:
+    mat mean_value_results = zeros(N_MC,8);
+    // ^ Columns: MC_cycles, E_mean, E2_mean, M_mean, M_abs_mean, M2_mean, C_V, chi.
+    cout << "\nPerforming Metropolis algorithm...\n\n";
+    for (int n=1; n<=N_MC; n++){ // N_MC MC cycles
+        // Run one MC cycle:
+        isingSolver20x20.metropolis_one_time_and_update_E_M_lists(n);
+
+        // Calculate and update the mean values:
+        isingSolver20x20.calculate_mean_results_current_MC_cycle(n);
+
+        // Update the mean results array:
+        mean_value_results(n-1,0) = n; // MC cycle number.
+        mean_value_results(n-1, span(1,7)) = isingSolver20x20.get_mean_results();
+    }   
+    //cout << "State after Metropolis:\n";
+    //isingSolver20x20.print_spinMatrix();
+
+    // Save the results:
+    // The results directory (the saving location of the results):
+    string directory = "../results/4d/";
+    // First, save the results for E and M (and E^2, M^2 and |M|) as a function
+    // of MC cycles:
+    string filename = "4d_mean_values_vs_MC_cycles.csv";
+    field<string> header_MVs(mean_value_results.n_cols);
+    header_MVs(0) = "MC_cycle"; header_MVs(1) = "E_mean"; header_MVs(2) = "E2_mean";
+    header_MVs(3) = "M_mean"; header_MVs(4) = "M_abs_mean"; header_MVs(5) = "M2_mean";
+    header_MVs(6) = "C_V"; header_MVs(7) = "chi";
+    writeGeneralMatrixToCSV(mean_value_results, header_MVs, filename, directory);
+
+    // Save E_list, E2_list, etc. in another file:
+    // Results matrix containing E_list, M_list, E2_list, M2_list, M_abs_list:
+    mat results_E_M = isingSolver20x20.get_E_list_M_list();
+    // The results directory (the saving location of the results):
+    // First, save the results for E and M (and E^2, M^2 and |M|) as a function
+    // of MC cycles:
+    filename = "4d_E_list_M_list.csv";
+    field<string> header(results_E_M.n_cols);
+    header(0) = "MC_cycle"; header(1) = "E"; header(2) = "E^2";
+    header(3) = "M"; header(4) = "M_abs"; header(5) = "M^2";
+    writeGeneralMatrixToCSV(results_E_M, header, filename, directory);
 }
 
 

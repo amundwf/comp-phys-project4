@@ -61,6 +61,7 @@ public:
     int calculate_M(); // Calculates the current net magnetization |M| of the lattice.
 
     void calculate_mean_results(); // Calculates E_mean, M_mean, C_V from E_list and M_list.
+    void calculate_mean_results_current_MC_cycle(int current_MC_cycle);
 
     arma::imat get_spinMatrix(); // Output the spin matrix
     void print_spinMatrix();
@@ -73,6 +74,7 @@ public:
 
     // Running the metropolis algorithm:
     void metropolis_one_time(); // Run the Metropolis algorithm one time (one MC cycle?)
+    void metropolis_one_time_and_update_E_M_lists(int list_idx);
     void run_metropolis_full(); // Run the Metropolis algorithm for N_MC MC cycles
 };
 #endif

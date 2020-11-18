@@ -1,10 +1,14 @@
 #include "utils.hpp"
 #include "ising_solver.hpp"
+#include "omp.h"
+#include <time.h>
 #include <iostream>
 #include <cmath>
 #include <armadillo>
 #include <fstream>
 #include <random>
+#include <iomanip>
+#define NUM_THREADS 8
 
 using namespace std;
 using namespace arma;
@@ -211,6 +215,65 @@ void run_4d_most_likely_state(){
     writeGeneralMatrixToCSV(results_E_M, header, filename, directory);
 }
 
+
+void run_4f(){
+    int L = 20; // 2x2 spin system
+    // (Just some random test values at first when testing):
+    int N_MC = 100000;
+
+    // Set the number of threads.
+    omp_set_num_threads(NUM_THREADS);
+    cout << "The number of processors available = " << omp_get_num_procs ( ) << endl;
+    
+    // Set the temperature steps.
+    double Tstart = 2.1;
+    double Tend = 2.4;
+    double Tsteps = 8;
+    double T_step_length = (Tend - Tstart)/Tsteps;
+
+    // Matrix for results.
+    mat mean_value_results = zeros(Tsteps,8);
+
+    // Temperature vector.
+    vector<double> T_schedule;
+    for (double i = Tstart; i <= Tend; i+= T_step_length){
+        T_schedule.push_back(i);
+    }
+
+    // Start timing.
+    double wtime = omp_get_wtime ( );
+
+    int i;
+    // Start parallel job.
+    # pragma omp parallel for default(shared) private (i)
+    for (int i=0; i < int(Tsteps); i++){
+        double T = T_schedule[i];
+        cout << "\nTemperature is:" << T << endl;
+        IsingSolver isingSolver20x20(L, T, N_MC);
+        //initialise variables.
+        isingSolver20x20.init_parallel_variables();
+
+        for (int n=1; n<=N_MC; n++){ // N_MC MC cycles
+            // Run one MC cycle:
+            isingSolver20x20.metropolis_one_time_parallel();
+        }  
+    mean_value_results(i, 0) = T;
+    mean_value_results(i, span(1,7)) = isingSolver20x20.get_mean_results_parallel();
+    }
+
+    // Print wall time.
+    wtime = omp_get_wtime ( ) - wtime;
+    cout << "  Elapsed time in seconds = " << wtime << endl;
+    
+    // Save the results.
+    string directory = "../results/4d/";
+    string filename = "temp_range.csv";
+    field<string> header(mean_value_results.n_cols);
+    header(0) = "E_mean"; header(1) = "E2_mean"; header(2) = "M_mean";
+    header(3) = "M_abs_mean"; header(4) = "M2_mean"; header(5) = "C_V";
+    header(6) = "chi";
+    writeGeneralMatrixToCSV(mean_value_results, header, filename, directory);
+}
 
 /* // 4f: Multiple values of T.
 void run_4f(){

@@ -22,4 +22,6 @@ void run_4c_ising();
 
 void run_4d_most_likely_state();
 
+void run_4f();
+
 #endif

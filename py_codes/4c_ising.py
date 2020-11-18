@@ -23,16 +23,8 @@ if runCppCode == True:
     os.system("echo executing...")
     os.system("./main.out")
 
-
 # The results directory:
 directory = "../results/4c_ising/"
-
-# Read the planet names from the planet_names.csv file:
-'''
-planetNamesData = np.loadtxt(directory + "planet_names.csv", skiprows=0, delimiter=",")
-planetNamesData = pd.DataFrame(planetNamesData, columns=["planet_names"])
-planetNames = planetNamesData["planet_names"]
-'''
 
 # E_list and M_list:
 filename = "4c_E_list_M_list.csv"
@@ -92,27 +84,24 @@ plotCodeWord = "M_list"
 
 labelSize = 13
 titleSize = 12
+markerSize = 2.5
 
 if plotCodeWord == "E_list":
     # Plot E_list
-    plt.plot(MC_cycle_list, E_list, '.', label='E_list', markersize=3)
+    plt.plot(MC_cycle_list, E_list, '.', label='E_list', markersize=markerSize)
     # Plot the mean as well (as a straight horizontal line)
     plt.plot([MC_cycle_list[0], MC_cycle_list[-1]], [E_mean, E_mean], 'r-', label='E_mean')
     #plt.plot([MC_cycle_list[0], MC_cycle_list[-1]], [E_mean, E_mean])
     plt.ylabel(r'$E$', fontsize=labelSize)
-    plt.suptitle('Energy of 2x2 spin system vs. Monte Carlo cycles', fontsize=titleSize)
+    plt.suptitle('The energy of the 2x2 spin system vs. Monte Carlo cycles', fontsize=titleSize)
 
 elif plotCodeWord == "M_list":
     # Plot M_list
-    plt.plot(MC_cycle_list, M_list, '.')
+    plt.plot(MC_cycle_list, M_list, '.', markersize=markerSize)
     plt.ylabel(r'$M$', fontsize=labelSize)
-    plt.suptitle('Magnetisation of 2x2 spin system vs. Monte Carlo cycles', fontsize=titleSize)
+    plt.suptitle('The magnetisation of the 2x2 spin system vs. Monte Carlo cycles', fontsize=titleSize)
 
 plt.xlabel(r'Number of Monte Carlo cycles', fontsize=labelSize)
-
-#plt.xlim(-1.5, 1.5)
-#plt.ylim(-1.5, 1.5)
-#plt.axis('equal')
 plt.legend()
 plt.grid()
 plt.show()

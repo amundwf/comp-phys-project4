@@ -7,6 +7,15 @@ run:
 	./main.out
 
 
+allp: compilep runp
+
+compilep:
+	g++ -O3 -o main.out main.cpp utils.cpp ising_solver.cpp -larmadillo -fopenmp
+
+runp:
+	./main.out
+
+
 all_testing: compile_testing run_testing
 
 compile_testing:

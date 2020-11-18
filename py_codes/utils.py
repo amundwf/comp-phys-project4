@@ -90,6 +90,11 @@ def plot_each_cycle():
     
     f.suptitle("Expectation values for {} Monte Carlo cycles for a 2x2 spin matrix".format(N_MC))
     
+def Z_analytical_2x2(J, kB, T):
+    # The analytical expression of Z for a 2x2 spin lattice.
+    beta = 1/float(kB*T); x = float(8*J*beta)
+    Z = 4*np.cosh(x) + 12
+    return Z
     
 def plot_each_temperature():
         
@@ -136,5 +141,41 @@ def plot_each_temperature():
                 f.suptitle("Expectation values for 100,000 Monte Carlo cycles for a 2x2 spin matrix. An additional 10% were added for equilibrium")
                 i += 1
     plt.savefig(directory + "Ising_100,000.png")
-                
-plot_each_temperature()        
+                      
+def E_mean_analytical_2x2(J, kB, T):
+    beta = 1/float(kB*T)
+    x = float(8*J*beta)
+    Z = float(Z_analytical_2x2(J, kB, T))
+    #E_mean = -8*J*np.sinh(x)/(np.cosh(x)+3)
+    E_mean = -(1/Z)*32*J*np.sinh(x)
+    return E_mean
+
+def E2_mean_analytical_2x2(J, kB, T):
+    beta = 1/float(kB*T); x = float(8*J*beta); Z = Z_analytical_2x2(J, kB, T)
+    E2_mean = (1/Z)*256*J*J*np.cosh(x)
+    return E2_mean
+
+def M_abs_mean_analytical_2x2(J, kB, T):
+    beta = 1/float(kB*T); x = float(8*J*beta); Z = Z_analytical_2x2(J, kB, T)
+    M_abs_mean = (1/Z)*8*(np.exp(x)+2)
+    return M_abs_mean
+
+def M2_mean_analytical_2x2(J, kB, T):
+    beta = 1/float(kB*T); x = float(8*J*beta); Z = Z_analytical_2x2(J, kB, T)
+    M2_mean = (1/Z)*32*(np.exp(x)+1)
+    return M2_mean
+
+def C_V_analytical_2x2(J, kB, T):
+    beta = 1/float(kB*T); x = float(8*J*beta); Z = Z_analytical_2x2(J, kB, T)
+    E2_mean = E2_mean_analytical_2x2(J, kB, T)
+    E_mean = E_mean_analytical_2x2(J, kB, T)
+    #C_V = (256*J*J/(kB*T*T*Z)) * (np.cosh(x) - (1/Z)*((np.sinh(x))**2))
+    C_V = (1/(kB*T*T))*(E2_mean - E_mean**2)
+    return C_V
+
+def chi_analytical_2x2(J, kB, T):
+    beta = 1/float(kB*T); x = float(8*J*beta); Z = Z_analytical_2x2(J, kB, T)
+    M2_mean = M2_mean_analytical_2x2(J, kB, T)
+    M_abs_mean = M_abs_mean_analytical_2x2(J, kB, T)
+    chi = beta*(M2_mean - M_abs_mean**2)
+    return chi

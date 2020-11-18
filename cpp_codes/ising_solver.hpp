@@ -23,26 +23,34 @@ private:
 
     // The solver needs to calculate these quantities:
     double E;       // The current energy of the system.
-    arma::vec E_list; // Energy values after each MC cycle.
-    double E_mean;  // The mean energy of the system over the Monte Carlo cycles.
     int M;          // The current net magnetization M of the system.
-    arma::Col<int> M_list; // Magnetisation values after each MC cycle.
-    double M_mean;  // The mean net magnetization of the system.
-    double C_v;     // The specific heat of the system.
-    double chi;     // The susceptibility of the system.
-    arma::vec E2_list;
-    arma::vec M2_list;
-    arma::vec Mabs_list;
+    
+    // Lists of energy and magnetisation over the MC cycles:
+    arma::vec E_list; // Energy values for each MC cycle.
+    arma::vec M_list; // Magnetisation values for each MC cycle.
+    arma::vec E2_list; // Values of E^2 for each MC cycle.
+    arma::vec M2_list; // Values of M^2 for each MC cycle.
+    arma::vec M_abs_list; // Values of |M| for each MC cycle.
 
-    arma::imat spinMatrix;  // This is the spins.
+    // Quantities based on expected values:
+    double E_mean;  // The mean energy of the system over the Monte Carlo cycles.
+    double E2_mean; // The mean of E^2.
+    double M_mean;  // The mean net magnetization of the system.
+    double M_abs_mean; // The mean net absolute value of the magnetization of the system.
+    double M2_mean; // The mean of M^2.
+    double C_V;     // The specific heat of the system.
+    double chi;     // The susceptibility of the system.
+    
+    arma::imat spinMatrix;  // This is the current spin lattice.
     arma::imat PBC_spinMatrix; // N+2 x N+2 matrix (containing periodic boundary
     // conditions along the edges of the matrix).
+
+    void make_PBC_spinMatrix(); // Makes the PBC matrix from spinMatrix.
 
     arma::Col<int> dE_values; // Contains the 5 possible values of dE.
     arma::vec weights; // Contains the corresponding 5 possible values of e^{-beta*dE}.
     void set_dE_values_and_weights();
 public:
-    void make_PBC_spinMatrix();
     // Constructor with a spin state matrix as input:
     IsingSolver(arma::imat spinMatrix, double T, int N_MC);
     // Constructor that creates a random spin array, with chosen matrix dimensionality L
@@ -52,14 +60,21 @@ public:
     double calculate_E(); // Calculates the current energy of the lattice (PBC).
     int calculate_M(); // Calculates the current net magnetization |M| of the lattice.
 
+    void calculate_mean_results(); // Calculates E_mean, M_mean, C_V from E_list and M_list.
+    void calculate_mean_results_current_MC_cycle(int current_MC_cycle);
+
     arma::imat get_spinMatrix(); // Output the spin matrix
     void print_spinMatrix();
     void print_PBCSpinMatrix();
+
     void print_E_list_and_M_list();
-    arma::mat get_results_matrix();
+    arma::mat get_E_list_M_list();
+
+    arma::Row<double> get_mean_results();
 
     // Running the metropolis algorithm:
     void metropolis_one_time(); // Run the Metropolis algorithm one time (one MC cycle?)
+    void metropolis_one_time_and_update_E_M_lists(int list_idx);
     void run_metropolis_full(); // Run the Metropolis algorithm for N_MC MC cycles
 };
 #endif

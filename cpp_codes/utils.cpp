@@ -107,17 +107,17 @@ void unit_testing_2x2(){
 void run_4c_ising(){
     int L = 2; // 2x2 spin system
     // (Just some random test values at first when testing):
-    int N_MC = 1e5;//
+    int N_MC = 1e4;//
     // Choose the temperature value to run the Metropolis algorithm for:
-    double T = 1.0;
+    double T = 1;
 
     imat spin_mat(L, L, fill::ones);
     spin_mat(0,0) = 1; spin_mat(0,1) = 1;
     spin_mat(1,0) = 1; spin_mat(1,1) = 1;
 
     // Make the Ising solver object (random 2x2 spin matrix):
-    IsingSolver isingSolver2x2(L, T, N_MC); // Generates a random 2x2 spin state.
-    //IsingSolver isingSolver2x2(spin_mat, T, N_MC);
+    //IsingSolver isingSolver2x2(L, T, N_MC); // Generates a random 2x2 spin state.
+    IsingSolver isingSolver2x2(spin_mat, T, N_MC);
 
     cout << "State before Metropolis:\n";
     isingSolver2x2.print_spinMatrix();
@@ -157,7 +157,7 @@ void run_4c_ising(){
 void run_4d_most_likely_state(){
     int L = 20; // 2x2 spin system
     // (Just some random test values at first when testing):
-    int N_MC = 100;
+    int N_MC = 100000;
     // Choose the temperature value to run the Metropolis algorithm for:
     double T = 1;
 

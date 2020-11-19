@@ -20,7 +20,9 @@ private:
     // so it is set to the type 'int'.
 
     int N_MC; // Chosen number of Monte Carlo cycles to run the metropolis algorithm.
-
+    int N1_MC; // Equil. cycles subtracted. 
+    double L2; // L squared. 
+    
     // The solver needs to calculate these quantities:
     double E;       // The current energy of the system.
     int M;          // The current net magnetization M of the system.
@@ -57,6 +59,8 @@ public:
     // as input:
     IsingSolver(int L, double T, int N_MC);
 
+    void init_parallel_variables(); // initialise mean values to zero. 
+ 
     double calculate_E(); // Calculates the current energy of the lattice (PBC).
     int calculate_M(); // Calculates the current net magnetization |M| of the lattice.
 
@@ -71,10 +75,12 @@ public:
     arma::mat get_E_list_M_list();
 
     arma::Row<double> get_mean_results();
+    arma::Row<double> get_mean_results_parallel(); // get parallel results, i.e just 7 values.
 
     // Running the metropolis algorithm:
     void metropolis_one_time(); // Run the Metropolis algorithm one time (one MC cycle?)
     void metropolis_one_time_and_update_E_M_lists(int list_idx);
     void run_metropolis_full(); // Run the Metropolis algorithm for N_MC MC cycles
+    void metropolis_one_time_parallel(); // add to the mean each cycle.
 };
 #endif

@@ -176,12 +176,12 @@ mat IsingSolver::get_E_list_M_list(){
     // Paste E_list and M_list together in an array with two columns:
     mat E_M_array = mat(N_MC+1, 6, fill::zeros);
 
-    E_M_array(span(0,N_MC), 0) = MC_list/L2;
-    E_M_array(span(0,N_MC), 1) = E_list/L2;
-    E_M_array(span(0,N_MC), 2) = E2_list/L2;
-    E_M_array(span(0,N_MC), 3) = M_list_double/L2;
-    E_M_array(span(0,N_MC), 4) = M_abs_list/L2;
-    E_M_array(span(0,N_MC), 5) = M2_list/L2;
+    E_M_array(span(0,N_MC), 0) = MC_list;
+    E_M_array(span(0,N_MC), 1) = E_list;
+    E_M_array(span(0,N_MC), 2) = E2_list;
+    E_M_array(span(0,N_MC), 3) = M_list_double;
+    E_M_array(span(0,N_MC), 4) = M_abs_list;
+    E_M_array(span(0,N_MC), 5) = M2_list;
     
     // Return the array:
     return E_M_array;
@@ -443,14 +443,14 @@ Row<double> IsingSolver::get_mean_results_parallel(){
     // Returns all four quantities that are based on mean values: <E>, <M>,
     // C_V and chi.
     
-    C_V = (1/(kB*T*T))*(E2_mean - E_mean*E_mean)/L2;
+    C_V = (1/(kB*T*T))*(E2_mean - E_mean*E_mean);
     // Susceptibility:
-    chi = (1/(kB*T))*(M2_mean - M_abs_mean*M_abs_mean)/L2;
+    chi = (1/(kB*T))*(M2_mean - M_abs_mean*M_abs_mean);
 
     Row<double> MVs_array(7); // MV = mean value
     MVs_array(0) = E_mean/L2; MVs_array(1) = E2_mean/L2;
     MVs_array(2) = M_mean/L2; MVs_array(3) = M_abs_mean/L2; MVs_array(4) = M2_mean/L2;
-    MVs_array(5) = C_V; MVs_array(6) = chi;
+    MVs_array(5) = C_V/L2; MVs_array(6) = chi/L2;
 
     return MVs_array;
 }

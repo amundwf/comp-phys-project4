@@ -165,7 +165,8 @@ void IsingSolver::print_E_list_and_M_list(){
 }
 
 mat IsingSolver::get_E_list_M_list(){
-    // This function prints E_list and M_list in an array with two columns.
+    // This function returns the results ,should rename it. Also 
+    // it divides by the number of spins. 
     vec MC_list = vec(N_MC+1);
     for (int i=0; i<=N_MC; i++){
         MC_list(i) = i;
@@ -175,12 +176,12 @@ mat IsingSolver::get_E_list_M_list(){
     // Paste E_list and M_list together in an array with two columns:
     mat E_M_array = mat(N_MC+1, 6, fill::zeros);
 
-    E_M_array(span(0,N_MC), 0) = MC_list;
-    E_M_array(span(0,N_MC), 1) = E_list;
-    E_M_array(span(0,N_MC), 2) = E2_list;
-    E_M_array(span(0,N_MC), 3) = M_list_double;
-    E_M_array(span(0,N_MC), 4) = M_abs_list;
-    E_M_array(span(0,N_MC), 5) = M2_list;
+    E_M_array(span(0,N_MC), 0) = MC_list/L2;
+    E_M_array(span(0,N_MC), 1) = E_list/L2;
+    E_M_array(span(0,N_MC), 2) = E2_list/L2;
+    E_M_array(span(0,N_MC), 3) = M_list_double/L2;
+    E_M_array(span(0,N_MC), 4) = M_abs_list/L2;
+    E_M_array(span(0,N_MC), 5) = M2_list/L2;
     
     // Return the array:
     return E_M_array;

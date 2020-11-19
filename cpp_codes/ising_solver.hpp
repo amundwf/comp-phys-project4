@@ -33,6 +33,7 @@ private:
     arma::vec E2_list; // Values of E^2 for each MC cycle.
     arma::vec M2_list; // Values of M^2 for each MC cycle.
     arma::vec M_abs_list; // Values of |M| for each MC cycle.
+    arma::vec flipsAccepted_list; // number of accepted flips per MC cycle.
 
     // Quantities based on expected values:
     double E_mean;  // The mean energy of the system over the Monte Carlo cycles.

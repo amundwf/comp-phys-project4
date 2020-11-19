@@ -82,6 +82,9 @@ IsingSolver::IsingSolver(imat spinMatrix, double T, int N_MC){
     E_list(0) = E; M_list(0) = M;
     E2_list(0) = E*E; M2_list(0) = M*M;
     M_abs_list(0) = fabs(M);
+
+    // Number of accepted flips per MC cycle.
+    flipsAccepted_list = vec(N_MC+1, fill::zeros);
 }
 
 // Constructor which initiates a random spin matrix:
@@ -132,6 +135,8 @@ IsingSolver::IsingSolver(int L, double T, int N_MC){
     E_list(0) = E; M_list(0) = M;
     E2_list(0) = E*E; M2_list(0) = M*M;
     M_abs_list(0) = fabs(M);
+
+    flipsAccepted_list = vec(N_MC+1, fill::zeros);
 }
 
 imat IsingSolver::get_spinMatrix(){
@@ -174,7 +179,7 @@ mat IsingSolver::get_E_list_M_list(){
 
     vec M_list_double = conv_to<vec>::from(M_list); // Convert M_list to double vector
     // Paste E_list and M_list together in an array with two columns:
-    mat E_M_array = mat(N_MC+1, 6, fill::zeros);
+    mat E_M_array = mat(N_MC+1, 7, fill::zeros);
 
     E_M_array(span(0,N_MC), 0) = MC_list;
     E_M_array(span(0,N_MC), 1) = E_list;
@@ -182,7 +187,8 @@ mat IsingSolver::get_E_list_M_list(){
     E_M_array(span(0,N_MC), 3) = M_list_double;
     E_M_array(span(0,N_MC), 4) = M_abs_list;
     E_M_array(span(0,N_MC), 5) = M2_list;
-    
+    E_M_array(span(0,N_MC), 6) = flipsAccepted_list;
+
     // Return the array:
     return E_M_array;
 }
@@ -305,6 +311,7 @@ Row<double> IsingSolver::get_mean_results(){
 void IsingSolver::metropolis_one_time(){
     // This function runs the Metropolis algorithm one time (one MC cycle?)
     // (See the metropolis algorithm implementation in the lecture notes p. 438)
+
     for (int y=0; y<=L-1; y++){ // Go through all spins (but pick a random position
     // each time).
         for (int x=0; x<=L-1; x++){
@@ -329,6 +336,7 @@ void IsingSolver::metropolis_one_time(){
                 // Also update the energy and magnetisation:
                 E += dE;
                 M += 2*PBC_spinMatrix(iy,ix);
+                
             }
         }
     }
@@ -339,6 +347,7 @@ void IsingSolver::metropolis_one_time_and_update_E_M_lists(int list_idx){
     // etc. in E_list, E2_list, M_list, ... respectively, for one index value.
     // int list_idx: Current list index of E_list, E2_list, etc. corresponding to
     // the current MC cycle.
+    int flipsAccepted = 0;
     for (int y=0; y<=L-1; y++){ // Go through all spins (but pick a random position
     // each time).
         for (int x=0; x<=L-1; x++){
@@ -363,13 +372,14 @@ void IsingSolver::metropolis_one_time_and_update_E_M_lists(int list_idx){
                 // Also update the energy and magnetisation:
                 E += dE;
                 M += 2*PBC_spinMatrix(iy,ix);
+                flipsAccepted += 1;
             }
         }
     }
     // Add the new energy and magnetisation to the lists of E and M (as
     // functions of # MC cycles):
     E_list(list_idx) = E; M_list(list_idx) = M; E2_list(list_idx) = E*E; M2_list(list_idx) = M*M;
-    M_abs_list(list_idx)= fabs(M);
+    M_abs_list(list_idx)= fabs(M); flipsAccepted_list(list_idx) = flipsAccepted;
 }
 
 void IsingSolver::run_metropolis_full(){

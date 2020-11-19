@@ -44,14 +44,14 @@ def plot_spinMatrix(spinMatrix):
 def plot_4c_ising():
     
     directory = "../results/4c_ising/"
-    filename = "20x20_T=1.0_N=100000.csv"
+    filename = "2x2_T=1.0_N=100000.csv"
     
     data = np.loadtxt(directory +filename, skiprows=1, delimiter=",")
     data = pd.DataFrame(data, columns=["MC_cycles", "E", "E2", "M", "Mabs", "M2"])
     
     spinState = "ordered"
     T = 1.0
-    L = 20.0
+    L = 2.0
     L2 = L*L
     MC = data["MC_cycles"]
     N_MC = len(data['MC_cycles']) -1
@@ -91,7 +91,77 @@ def plot_4c_ising():
     print("CV", CV)
     print("chi", chi)
 
-plot_4c_ising()
+def plot_4d():
+    directory = "../results/4d/"
+    filename = "4d_mean_values_vs_100000_cycles_T=1.0_ordered.csv"
+    
+    data = np.loadtxt(directory +filename, skiprows=1, delimiter=",")
+    data = pd.DataFrame(data, columns=["MC_cycles", "E_mean", "E2_mean", "M_mean", "M_abs_mean",
+                                       "M2_mean", "CV", "chi"])
+    
+    spinState = "ordered"
+    T = 1.0
+    L = 20.0
+    L2 = L*L
+    MC = data["MC_cycles"]
+    N_MC = len(data['MC_cycles'])
+    E_mean = data["E_mean"]
+    E2_mean = data["E2_mean"]
+    M_mean = data["M_mean"]
+    M2_mean = data["M2_mean"]
+    Mabs_mean = data["M_abs_mean"]
+    
+    f = plt.figure(figsize=(18, 10), dpi=80, facecolor='w', edgecolor='k')
+    
+    plt.subplot(211)
+    plt.plot(MC, E_mean/L2, '.')
+    plt.xscale("log")
+    plt.xlabel("Monte Carlo cycles")
+    plt.ylabel("Expectation Energy")
+    
+    plt.subplot(212)
+    plt.plot(MC, Mabs_mean/L2, '.')
+    plt.xscale("log")
+    plt.xlabel("Monte Carlo cycles")
+    plt.ylabel("Expectation Magnetisation")
+    
+    f.tight_layout(pad=1.0)
+    #f.suptitle("20x20 spin matrix, initialised with random spins.")
+    plt.savefig(directory + "{}_cycles_T={}_{}.pdf".format(N_MC, T, spinState))
+
+plot_4d()
+
+def plot_4d_flipRatio():
+    ''' Plot the ration of flips accepted at each monte carlo
+    cycle.
+    '''
+    directory = "../results/4d/"
+    filename = "4d_mean_values_vs_100000_cycles_T=1.0_ordered.csv"
+    
+    data = np.loadtxt(directory +filename, skiprows=1, delimiter=",")
+    data = pd.DataFrame(data, columns=["MC_cycles", "E_mean", "E2_mean", "M_mean", "M_abs_mean",
+                                       "M2_mean", "CV", "chi", "flipsAccepted"])
+    
+    L = 20
+    L2 = L*L
+    MC = data["MC_cycles"]
+    N_MC = len(data['MC_cycles'])
+    flipsAccepted = data["flipsAccepted"]
+    
+    flipRatio = 1.0 / (L2/flipsAccepted - 1.0)
+    
+    f = plt.figure(figsize=(18, 10), dpi=80, facecolor='w', edgecolor='k')
+
+    plt.plot(MC, flipRatio, '.')
+    plt.xscale("log")
+    plt.xlabel("Monte Carlo cycles")
+    plt.ylabel("Flip Ratio")
+    
+    f.tight_layout(pad=1.0)
+    #f.suptitle("20x20 spin matrix, initialised with random spins.")
+    plt.savefig(directory + "flipRatio.pdf")
+    
+    return
 
 def plot_4f_python():
         

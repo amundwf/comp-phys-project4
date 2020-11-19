@@ -217,9 +217,9 @@ void run_4d_most_likely_state(){
 
 
 void run_4f(){
-    int L = 20; // 2x2 spin system
-    // (Just some random test values at first when testing):
-    int N_MC = 100000;
+
+    // Monte Carlo cycles.
+    int N_MC = 10000;
 
     // Set the number of threads.
     omp_set_num_threads(NUM_THREADS);
@@ -236,19 +236,19 @@ void run_4f(){
     std::ostringstream streamObj3;
     // Set Fixed -Point Notation
     streamObj3 << std::fixed;
-    // Set precision to 2 digits
+    // Set precision to 1 digits
     streamObj3 << std::setprecision(1);
     //Add double to stream
     streamObj3 << Tstart;
-    // Get string from output string stream
     std::string stringTstart = streamObj3.str();
-    streamObj3 << Tend;
-    std::string stringTend = streamObj3.str();
-    streamObj3 << Tsteps;
-    std::string stringTsteps = streamObj3.str();
 
-    // Matrix for results.
-    mat mean_value_results = zeros(Tsteps,8);
+    std::ostringstream streamObj;
+    // Set Fixed -Point Notation
+    streamObj << std::fixed;
+    // Set precision to 1 digits
+    streamObj << std::setprecision(1);
+    streamObj << Tend;
+    std::string stringTend = streamObj.str();
 
     // Temperature vector.
     vector<double> T_schedule;
@@ -259,44 +259,53 @@ void run_4f(){
     // Start timing.
     double wtime = omp_get_wtime ( );
 
+    // Needs to be declared before parallel task.
     int i;
-    // Start parallel job.
-    # pragma omp parallel for default(shared) private (i)
-    for (int i=0; i < int(Tsteps); i++){
-        double T = T_schedule[i];
-        cout << "\nT is:" << T << endl;
-        IsingSolver isingSolver20x20(L, T, N_MC);
-        //initialise variables.
-        isingSolver20x20.init_parallel_variables();
 
-        // Begin equilibrium cycles
-        for (int n=1; n<=int(N_MC*0.1); n++){ // N_MC MC cycles
-            // Run one MC cycle:
-            isingSolver20x20.metropolis_one_time_parallel();
-        }  
-        // Clear data.
-        isingSolver20x20.init_parallel_variables();
+    // Loop over spin matrices.
+    for (int L = 40; L <= 100; L+=20){
+        // Matrix for results.
+        mat mean_value_results = zeros(Tsteps,8);
+        cout << "The spin matrix dimentions is: " << L << "x" << L << endl;
+        cout << "Running Metropolis algo ..." << endl;
+        // Start parallel task.
+        # pragma omp parallel for default(shared) private (i)
+        for (int i=0; i < int(Tsteps); i++){
 
-        for (int n=int(N_MC*0.1); n<=N_MC; n++){ // N_MC MC cycles
-            // Run one MC cycle:
-            isingSolver20x20.metropolis_one_time_parallel();
-        }  
-    mean_value_results(i, 0) = T;
-    mean_value_results(i, span(1,7)) = isingSolver20x20.get_mean_results_parallel();
-    }
+            double T = T_schedule[i];
+            //cout << "\nT is: " << T << endl;
+            IsingSolver isingSolver(L, T, N_MC);
+            //initialise variables.
+            isingSolver.init_parallel_variables();
+
+            // Begin equilibrium cycles
+            for (int n=1; n<=int(N_MC*0.1); n++){ 
+                isingSolver.metropolis_one_time_parallel();
+            }  
+            // Clear data.
+            isingSolver.init_parallel_variables();
+
+            // Begin recording real data.
+            for (int n=int(N_MC*0.1); n<=N_MC; n++){ 
+                isingSolver.metropolis_one_time_parallel();
+            }  
+        mean_value_results(i, 0) = T;
+        mean_value_results(i, span(1,7)) = isingSolver.get_mean_results_parallel();
+        } 
 
     // Print wall time.
     wtime = omp_get_wtime ( ) - wtime;
     cout << "  Elapsed time in seconds = " << wtime << endl;
     
     // Save the results.
-    string directory = "../results/4d/";
-    string filename = stringTstart + "_" + stringTend + "_steps=" + stringTsteps + "_L=" + to_string(L) + "_N=" + to_string(N_MC) + ".csv";
+    string directory = "../results/4f/";
+    string filename = stringTstart + "_" + stringTend + "_steps=" + to_string(int(Tsteps)) + "_L=" + to_string(L) + "_N=" + to_string(N_MC) + ".csv";
     field<string> header(mean_value_results.n_cols);
     header(1) = "E_mean"; header(2) = "E2_mean"; header(3) = "M_mean";
     header(4) = "M_abs_mean"; header(5) = "M2_mean"; header(6) = "C_V";
     header(7) = "chi"; header(0) = "Temperature";
     writeGeneralMatrixToCSV(mean_value_results, header, filename, directory);
+    }
 }
 
 /* // 4f: Multiple values of T.

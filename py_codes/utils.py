@@ -149,51 +149,51 @@ def plot_each_temperature_py():
     
 def plot_each_temperature_cpp():
         
-    directory = "../results/4d/"
-    filename = "temp_range.csv"
-    
+    directory = "../results/4f/"
     f = plt.figure(figsize=(18, 10), dpi=80, facecolor='w', edgecolor='k')
-    
-    
-    data = np.loadtxt(directory + filename, skiprows=1, delimiter=",")
-    data = pd.DataFrame(data, columns=["T", "E_mean", "E2_mean", "M_mean", "M_abs_mean",
-                                       "M2_mean", "CV", "chi"])
-    
-    L = 20
-    L2 = 20*20
-    T = data["T"]
-    E = data["E_mean"]
-    M = data["M_mean"]
-    CV = data["CV"]
-    chi = data["chi"]
-    
-    plt.subplot(221)
-    plt.plot(T, E/L2, '.-', label="{}".format(L))
-    plt.xlabel("Temperature")
-    plt.ylabel("Expectation Energy")
-    plt.legend()
-    
-    plt.subplot(222)
-    plt.plot(T, M/L2, '.-', label="{}".format(L))
-    plt.xlabel("Temperature")
-    plt.ylabel("Expectation Magnetisation")
-    plt.legend()
-    
-    plt.subplot(223)
-    plt.plot(T, CV/L2 , '.-', label="{}".format(L))
-    plt.xlabel("Temperature")
-    plt.ylabel("Specific Heat")
-    plt.legend()
-    
-    plt.subplot(224)
-    plt.plot(T, chi/L2 , '.-', label="{}".format(L))
-    plt.xlabel("Temperature")
-    plt.ylabel("Magnetic Susceptibility")
-    plt.legend()
-    
-    #f.suptitle("Expectation values for 100,000 Monte Carlo cycles for a 2x2 spin matrix. An additional 10% were added for equilibrium")
-    f.tight_layout(pad=1.0)
-    plt.savefig(directory + "10^5cycles_temp_range.pdf")
+    i=0
+    for filename in os.listdir(directory):
+        if filename.endswith(".csv"):
+            data = np.loadtxt(directory + filename, skiprows=1, delimiter=",")
+            data = pd.DataFrame(data, columns=["T", "E_mean", "E2_mean", "M_mean", "M_abs_mean",
+                                               "M2_mean", "CV", "chi"])
+            
+            L = [40, 60, 80, 100]
+            
+            T = data["T"]
+            E = data["E_mean"]
+            M = data["M_mean"]
+            CV = data["CV"]
+            chi = data["chi"]
+            
+            plt.subplot(221)
+            plt.plot(T, E, '.-', label="{}".format(L[i]))
+            plt.xlabel("Temperature")
+            plt.ylabel("Expectation Energy")
+            plt.legend()
+            
+            plt.subplot(222)
+            plt.plot(T, M, '.-', label="{}".format(L[i]))
+            plt.xlabel("Temperature")
+            plt.ylabel("Expectation Magnetisation")
+            plt.legend()
+            
+            plt.subplot(223)
+            plt.plot(T, CV, '.-', label="{}".format(L[i]))
+            plt.xlabel("Temperature")
+            plt.ylabel("Specific Heat")
+            plt.legend()
+            
+            plt.subplot(224)
+            plt.plot(T, chi, '.-', label="{}".format(L[i]))
+            plt.xlabel("Temperature")
+            plt.ylabel("Magnetic Susceptibility")
+            plt.legend()
+            
+            #f.suptitle("Expectation values for 100,000 Monte Carlo cycles for a 2x2 spin matrix. An additional 10% were added for equilibrium")
+            f.tight_layout(pad=1.0)
+            i+= 1
+    plt.savefig(directory + "MC=10^4_start=2.1_End=2.4_Steps=16.pdf")
                  
 plot_each_temperature_cpp()
      

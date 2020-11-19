@@ -21,7 +21,7 @@ private:
 
     int N_MC; // Chosen number of Monte Carlo cycles to run the metropolis algorithm.
     int N1_MC; // Equil. cycles subtracted. 
-    int N1_MC2; // N1_MC squared. 
+    double L2; // L squared. 
     
     // The solver needs to calculate these quantities:
     double E;       // The current energy of the system.

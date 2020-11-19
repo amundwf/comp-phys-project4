@@ -55,11 +55,10 @@ IsingSolver::IsingSolver(imat spinMatrix, double T, int N_MC){
     this->T = T;
     this->N_MC = N_MC;
     // Equilibrium cycles subtracted from full MC cycles.
-    this->N1_MC = (1-0.1)*N_MC;
-    this->N1_MC2 = N1_MC*N1_MC;
-
+    this->N1_MC = 0.9*N_MC;
+    
     L = spinMatrix.n_rows;
-
+    this->L2 = L*L;
     // Set the PBC matrix (by using the newly set spinMatrix):
     make_PBC_spinMatrix();
     // Set the 5 dE values and corresponding weights (Boltzmann PDE):
@@ -92,8 +91,8 @@ IsingSolver::IsingSolver(int L, double T, int N_MC){
     this->T = T;
     this->N_MC = N_MC;
     // Equilibrium cycles subtracted from full MC cycles.
-    this->N1_MC = (1-0.1)*N_MC;
-    this->N1_MC2 = N1_MC*N1_MC;
+    this->N1_MC = 0.9*N_MC;
+    this->L2 = L*L;
 
     arma_rng::set_seed_random(); // Set seed to a random value.
 	mat randMatrix = randu(L,L); // Uniform random elements between 0 and 1.
@@ -435,21 +434,21 @@ void IsingSolver::metropolis_one_time_parallel(){
     }
     // Add the new energy and magnetisation to the lists of E and M (as
     // functions of # MC cycles):
-    E_mean += E/double(N1_MC); M_mean += M/double(N1_MC); E2_mean += E*E/double(N1_MC2); M2_mean += M*M/double(N1_MC2);
-    M_abs_mean += abs(M)/double(N1_MC);
+    E_mean += E/double(N1_MC); M_mean += M/double(N1_MC); E2_mean += E*E/double(N1_MC); M2_mean += M*M/double(N1_MC);
+    M_abs_mean += fabs(M)/double(N1_MC);
 }
 
 Row<double> IsingSolver::get_mean_results_parallel(){
     // Returns all four quantities that are based on mean values: <E>, <M>,
     // C_V and chi.
     
-    C_V = (1/(kB*T*T))*(E2_mean - E_mean*E_mean);
+    C_V = (1/(kB*T*T))*(E2_mean - E_mean*E_mean)/L2;
     // Susceptibility:
-    chi = (1/(kB*T))*(M2_mean - M_abs_mean*M_abs_mean);
+    chi = (1/(kB*T))*(M2_mean - M_abs_mean*M_abs_mean)/L2;
 
     Row<double> MVs_array(7); // MV = mean value
-    MVs_array(0) = E_mean; MVs_array(1) = E2_mean;
-    MVs_array(2) = M_mean; MVs_array(3) = M_abs_mean; MVs_array(4) = M2_mean;
+    MVs_array(0) = E_mean/L2; MVs_array(1) = E2_mean/L2;
+    MVs_array(2) = M_mean/L2; MVs_array(3) = M_abs_mean/L2; MVs_array(4) = M2_mean/L2;
     MVs_array(5) = C_V; MVs_array(6) = chi;
 
     return MVs_array;

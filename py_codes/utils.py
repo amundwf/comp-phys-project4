@@ -93,14 +93,14 @@ def plot_4c_ising():
 
 def plot_4d():
     directory = "../results/4d/"
-    filename = "4d_mean_values_vs_100000_cycles_T=1.0_ordered.csv"
+    filename = "4d_mean_values_vs_100000_cycles_T=2.4_ordered.csv"
     
     data = np.loadtxt(directory +filename, skiprows=1, delimiter=",")
     data = pd.DataFrame(data, columns=["MC_cycles", "E_mean", "E2_mean", "M_mean", "M_abs_mean",
                                        "M2_mean", "CV", "chi"])
     
     spinState = "ordered"
-    T = 1.0
+    T = 2.4
     L = 20.0
     L2 = L*L
     MC = data["MC_cycles"]
@@ -129,18 +129,16 @@ def plot_4d():
     #f.suptitle("20x20 spin matrix, initialised with random spins.")
     plt.savefig(directory + "{}_cycles_T={}_{}.pdf".format(N_MC, T, spinState))
 
-plot_4d()
-
 def plot_4d_flipRatio():
     ''' Plot the ration of flips accepted at each monte carlo
     cycle.
     '''
     directory = "../results/4d/"
-    filename = "4d_mean_values_vs_100000_cycles_T=1.0_ordered.csv"
+    filename = "4d_results_100000_T=2.4_ordered.csv"
     
-    data = np.loadtxt(directory +filename, skiprows=1, delimiter=",")
+    data = np.loadtxt(directory + filename, skiprows=1, delimiter=",")
     data = pd.DataFrame(data, columns=["MC_cycles", "E_mean", "E2_mean", "M_mean", "M_abs_mean",
-                                       "M2_mean", "CV", "chi", "flipsAccepted"])
+                                       "M2_mean", "flipsAccepted"])
     
     L = 20
     L2 = L*L
@@ -162,6 +160,8 @@ def plot_4d_flipRatio():
     plt.savefig(directory + "flipRatio.pdf")
     
     return
+
+plot_4d_flipRatio()
 
 def plot_4f_python():
         

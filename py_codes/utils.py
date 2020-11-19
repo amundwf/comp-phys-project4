@@ -44,14 +44,15 @@ def plot_spinMatrix(spinMatrix):
 def plot_4c_ising():
     
     directory = "../results/4c_ising/"
-    filename = "2x2_T=1.0_N=100000.csv"
+    filename = "20x20_T=1.0_N=100000.csv"
     
     data = np.loadtxt(directory +filename, skiprows=1, delimiter=",")
     data = pd.DataFrame(data, columns=["MC_cycles", "E", "E2", "M", "Mabs", "M2"])
     
-    spinState = "random"
+    spinState = "ordered"
     T = 1.0
-    L = 2
+    L = 20.0
+    L2 = L*L
     MC = data["MC_cycles"]
     N_MC = len(data['MC_cycles']) -1
     E = data["E"]
@@ -63,13 +64,13 @@ def plot_4c_ising():
     f = plt.figure(figsize=(18, 10), dpi=80, facecolor='w', edgecolor='k')
     
     plt.subplot(211)
-    plt.plot(MC, E, '.')
+    plt.plot(MC, E/L2, '.')
     plt.xscale("log")
     plt.xlabel("Monte Carlo cycles")
     plt.ylabel("Energy")
     
     plt.subplot(212)
-    plt.plot(MC, Mabs, '.')
+    plt.plot(MC, Mabs/L2, '.')
     plt.xscale("log")
     plt.xlabel("Monte Carlo cycles")
     plt.ylabel("Magnetisation")
@@ -77,6 +78,21 @@ def plot_4c_ising():
     f.tight_layout(pad=1.0)
     plt.savefig(directory + "{}_cycles_T={}_{}.pdf".format(N_MC, T, spinState))
     
+    E_mean = np.mean(E)
+    M_mean = np.mean(Mabs)
+    E2_mean = np.mean(E2)
+    M2_mean = np.mean(M2)
+    CV = (E2_mean - E_mean*E_mean)*(1/(T*T))/L2
+    chi = (M2_mean - M_mean*M_mean)*(1/(T))/L2
+    
+    print("N", N_MC)
+    print("E mean", E_mean/L2)
+    print("M mean", M_mean/L2)
+    print("CV", CV)
+    print("chi", chi)
+
+plot_4c_ising()
+
 def plot_4f_python():
         
     directory = "C:/github/Ising/"

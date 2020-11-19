@@ -41,17 +41,17 @@ def plot_spinMatrix(spinMatrix):
     # black for values below 1 and white for values >= 1.
     plt.show()
 
-def plot_each_cycle():
+def plot_4c_ising():
     
-    directory = "../results/4d/"
-    filename = "T=1.0_L=20_N=100000_ordered.csv"
+    directory = "../results/4c_ising/"
+    filename = "2x2_T=1.0_N=100000.csv"
     
     data = np.loadtxt(directory +filename, skiprows=1, delimiter=",")
     data = pd.DataFrame(data, columns=["MC_cycles", "E", "E2", "M", "Mabs", "M2"])
     
-    spinState = "ordered"
+    spinState = "random"
     T = 1.0
-    L2 = 20*20
+    L = 2
     MC = data["MC_cycles"]
     N_MC = len(data['MC_cycles']) -1
     E = data["E"]
@@ -60,48 +60,24 @@ def plot_each_cycle():
     M2 = data["M2"]
     Mabs = data["Mabs"]
     
-    CV = (E2 - E*E)/T*T
-    chi = (M2 - M*M)/T
-    
     f = plt.figure(figsize=(18, 10), dpi=80, facecolor='w', edgecolor='k')
     
     plt.subplot(211)
-    plt.plot(MC, E/L2, '.')
+    plt.plot(MC, E, '.')
     plt.xscale("log")
     plt.xlabel("Monte Carlo cycles")
     plt.ylabel("Energy")
     
     plt.subplot(212)
-    plt.plot(MC, Mabs/L2, '.')
+    plt.plot(MC, Mabs, '.')
     plt.xscale("log")
     plt.xlabel("Monte Carlo cycles")
     plt.ylabel("Magnetisation")
     
     f.tight_layout(pad=1.0)
-    plt.savefig(directory + "10^5_cycles_T={}_{}.pdf".format(T, spinState))
-    '''
-    plt.subplot(223)
-    plt.plot(MC, CV , '.')
-    plt.xscale("log")
-    plt.xlabel("Monte Carlo cycles")
-    plt.ylabel("Specific Heat")
+    plt.savefig(directory + "{}_cycles_T={}_{}.pdf".format(N_MC, T, spinState))
     
-    plt.subplot(224)
-    plt.plot(MC, chi , '.')
-    plt.xscale("log")
-    plt.xlabel("Monte Carlo cycles")
-    plt.ylabel("Magnetic Susceptibility")
-    
-    f.suptitle("Expectation values for {} Monte Carlo cycles for a 2x2 spin matrix".format(N_MC))
-    '''
-
-def Z_analytical_2x2(J, kB, T):
-    # The analytical expression of Z for a 2x2 spin lattice.
-    beta = 1/float(kB*T); x = float(8*J*beta)
-    Z = 4*np.cosh(x) + 12
-    return Z
-    
-def plot_each_temperature_py():
+def plot_4f_python():
         
     directory = "C:/github/Ising/"
     i = 0
@@ -147,7 +123,7 @@ def plot_each_temperature_py():
                 i += 1
     plt.savefig(directory + "Ising_100,000.png")
     
-def plot_each_temperature_cpp():
+def plot_4f_cpp():
         
     directory = "../results/4f/"
     f = plt.figure(figsize=(18, 10), dpi=80, facecolor='w', edgecolor='k')
@@ -194,9 +170,13 @@ def plot_each_temperature_cpp():
             f.tight_layout(pad=1.0)
             i+= 1
     plt.savefig(directory + "MC=10^4_start=2.1_End=2.4_Steps=16.pdf")
-                 
-plot_each_temperature_cpp()
-     
+
+def Z_analytical_2x2(J, kB, T):
+    # The analytical expression of Z for a 2x2 spin lattice.
+    beta = 1/float(kB*T); x = float(8*J*beta)
+    Z = 4*np.cosh(x) + 12
+    return Z
+    
 def E_mean_analytical_2x2(J, kB, T):
     beta = 1/float(kB*T)
     x = float(8*J*beta)

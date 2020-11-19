@@ -159,13 +159,12 @@ void run_4d_most_likely_state(){
     // (Just some random test values at first when testing):
     int N_MC = 100000;
     // Choose the temperature value to run the Metropolis algorithm for:
-    double T = 1;
+    double T = 2.4;
 
     // Make the Ising solver object (random 20x20 spin matrix):
-    IsingSolver isingSolver20x20(L, T, N_MC); // Generates a random 2x2 spin state.
-
-    //cout << "State before Metropolis:\n";
-    //isingSolver20x20.print_spinMatrix();
+    //IsingSolver isingSolver20x20(L, T, N_MC); // Generates a random LxL spin state.
+    imat spin_mat(L, L, fill::ones);
+    IsingSolver isingSolver20x20(spin_mat, T, N_MC);
 
     // Run the metropolis algorithm, and for each MC cycle, calculate mean values
     // and add them to a list. Then save the lists for plotting.
@@ -194,7 +193,7 @@ void run_4d_most_likely_state(){
     string directory = "../results/4d/";
     // First, save the results for E and M (and E^2, M^2 and |M|) as a function
     // of MC cycles:
-    string filename = "4d_mean_values_vs_MC_cycles.csv";
+    string filename = "4d_mean_values_vs_" + to_string(N_MC) + "_cycles_T=2.4_ordered.csv";
     field<string> header_MVs(mean_value_results.n_cols);
     header_MVs(0) = "MC_cycle"; header_MVs(1) = "E_mean"; header_MVs(2) = "E2_mean";
     header_MVs(3) = "M_mean"; header_MVs(4) = "M_abs_mean"; header_MVs(5) = "M2_mean";
@@ -207,10 +206,10 @@ void run_4d_most_likely_state(){
     // The results directory (the saving location of the results):
     // First, save the results for E and M (and E^2, M^2 and |M|) as a function
     // of MC cycles:
-    filename = "4d_E_list_M_list.csv";
+    filename = "4d_results_"+ to_string(N_MC) +"_T=2.4_ordered.csv";
     field<string> header(results_E_M.n_cols);
     header(0) = "MC_cycle"; header(1) = "E"; header(2) = "E^2";
-    header(3) = "M"; header(4) = "M_abs"; header(5) = "M^2";
+    header(3) = "M"; header(4) = "M_abs"; header(5) = "M^2"; header(6) = "flipsAccepted";
     writeGeneralMatrixToCSV(results_E_M, header, filename, directory);
 }
 

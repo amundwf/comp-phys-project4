@@ -146,22 +146,21 @@ def plot_4d_flipRatio():
     MC = data["MC_cycles"]
     N_MC = len(data['MC_cycles'])
     flipsAccepted = data["flipsAccepted"]
-    
-    flipRatio = 1.0 / (L2/flipsAccepted - 1.0)
+
     
     f = plt.figure(figsize=(18, 10), dpi=80, facecolor='w', edgecolor='k')
 
-    plt.plot(MC, flipRatio, '.')
+    plt.plot(MC, flipsAccepted/L2, '.')
     plt.xscale("log")
     plt.xlabel("Monte Carlo cycles")
-    plt.ylabel("Flip Ratio")
+    plt.ylabel("Accepted configurations / Total configurations")
     
     f.tight_layout(pad=1.0)
     #f.suptitle("20x20 spin matrix, initialised with random spins.")
-    plt.savefig(directory + "flipRatio.pdf")
+    #plt.savefig(directory + "flipRatio.pdf")
     
     return
-
+plot_4d_flipRatio()
 def plot_4f_python():
         
     directory = "C:/github/Ising/"
@@ -258,7 +257,7 @@ def plot_4f_cpp():
             i+= 1
     plt.savefig(directory + "MC=10^3_start=2.1_End=2.4_Steps=16.pdf")
     return
-plot_4f_cpp()
+
 def Z_analytical_2x2(J, kB, T):
     # The analytical expression of Z for a 2x2 spin lattice.
     beta = 1/float(kB*T); x = float(8*J*beta)

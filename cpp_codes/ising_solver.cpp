@@ -137,6 +137,12 @@ IsingSolver::IsingSolver(int L, double T, int N_MC){
     M_abs_list(0) = fabs(M);
 
     flipsAccepted_list = vec(N_MC+1, fill::zeros);
+
+    E_total = 0.0;
+    E2_total = 0.0;
+    M_total = 0.0;
+    M_abs_total = 0.0;
+    M2_total = 0.0;
 }
 
 imat IsingSolver::get_spinMatrix(){
@@ -402,13 +408,11 @@ void IsingSolver::run_metropolis_full(){
 
 void IsingSolver::init_parallel_variables(){
     // Set all variables to zero. 
-    double E_mean = 0.0;
-    double E2_mean = 0.0;
-    double M_mean = 0.0;
-    double M_abs_mean = 0.;
-    double M2_mean = 0.0;
-    double C_V = 0.0; 
-    double chi = 0.0;
+    E_total = 0.0;
+    E2_total = 0.0;
+    M_total = 0.0;
+    M_abs_total = 0.0;
+    M2_total = 0.0;
 }
 
 void IsingSolver::metropolis_one_time_parallel(){
@@ -445,17 +449,26 @@ void IsingSolver::metropolis_one_time_parallel(){
     }
     // Add the new energy and magnetisation to the lists of E and M (as
     // functions of # MC cycles):
-    E_mean += E/double(N1_MC); M_mean += M/double(N1_MC); E2_mean += E*E/double(N1_MC); M2_mean += M*M/double(N1_MC);
-    M_abs_mean += fabs(M)/double(N1_MC);
+    E_total += E; M_total += M; E2_total += E*E; M2_total += M*M;
+    M_abs_total += fabs(M);
 }
 
 Row<double> IsingSolver::get_mean_results_parallel(){
     // Returns all four quantities that are based on mean values: <E>, <M>,
     // C_V and chi.
+
+    // The norm will take into account the equil steps. 
+    double N_MCdouble = double(N_MC);
+    double norm = 1/ (0.9*N_MCdouble);
+    double E_mean = E_total*norm;
+    double M_mean = M_total*norm;
+    double E2_mean = E2_total*norm;
+    double M2_mean = M2_total*norm;
+    double M_abs_mean = M_abs_total*norm;
     
-    C_V = (1/(kB*T*T))*(E2_mean - E_mean*E_mean);
+    double C_V = (1/(kB*T*T))*(E2_mean - E_mean*E_mean);
     // Susceptibility:
-    chi = (1/(kB*T))*(M2_mean - M_abs_mean*M_abs_mean);
+    double chi = (1/(kB*T))*(M2_mean - M_abs_mean*M_abs_mean);
 
     Row<double> MVs_array(7); // MV = mean value
     MVs_array(0) = E_mean/L2; MVs_array(1) = E2_mean/L2;

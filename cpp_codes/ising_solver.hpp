@@ -43,6 +43,13 @@ private:
     double M2_mean; // The mean of M^2.
     double C_V;     // The specific heat of the system.
     double chi;     // The susceptibility of the system.
+
+    // The total quantities used in parallelisation. 
+    double E_total;
+    double E2_total;
+    double M_total;
+    double M_abs_total;
+    double M2_total;
     
     arma::imat spinMatrix;  // This is the current spin lattice.
     arma::imat PBC_spinMatrix; // N+2 x N+2 matrix (containing periodic boundary

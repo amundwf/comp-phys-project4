@@ -226,7 +226,7 @@ void run_4f(){
     // Set the temperature steps.
     double Tstart = 2.1;
     double Tend = 2.4;
-    double Tsteps = 16;
+    double Tsteps = 32;
     double T_step_length = (Tend - Tstart)/Tsteps;
 
     // Make data into strings.
@@ -259,6 +259,7 @@ void run_4f(){
 
     // Needs to be declared before parallel task.
     int i;
+    double T;
 
     // Loop over spin matrices.
     for (int L = 40; L <= 100; L+=20){
@@ -267,43 +268,44 @@ void run_4f(){
         cout << "The spin matrix dimentions is: " << L << "x" << L << endl;
         cout << "Running Metropolis algo ..." << endl;
         // Start parallel task.
-        # pragma omp parallel for default(shared) private (i)
+        # pragma omp parallel shared(mean_value_results, L, N_MC, Tsteps, T_schedule) private (i)
+        {
+        # pragma omp for
         for (int i=0; i < int(Tsteps); i++){
 
             double T = T_schedule[i];
             //cout << "\nT is: " << T << endl;
             IsingSolver isingSolver(L, T, N_MC);
-            //initialise variables.
-            isingSolver.init_parallel_variables();
-
+            
             // Begin equilibrium cycles
             for (int n=1; n<=int(N_MC*0.1); n++){ 
                 isingSolver.metropolis_one_time_parallel();
             }  
             // Clear data.
             isingSolver.init_parallel_variables();
-
+            
             // Begin recording real data.
             for (int n=int(N_MC*0.1); n<=N_MC; n++){ 
                 isingSolver.metropolis_one_time_parallel();
             }  
-        mean_value_results(i, 0) = T;
-        mean_value_results(i, span(1,7)) = isingSolver.get_mean_results_parallel();
+            mean_value_results(i, 0) = T;
+            mean_value_results(i, span(1,7)) = isingSolver.get_mean_results_parallel();
         } 
-
-    // Print wall time.
-    wtime = omp_get_wtime ( ) - wtime;
-    cout << "  Elapsed time in seconds = " << wtime << endl;
-    
-    // Save the results.
-    string directory = "../results/4f/";
-    string filename = stringTstart + "_" + stringTend + "_steps=" + to_string(int(Tsteps)) + "_L=" + to_string(L) + "_N=" + to_string(N_MC) + ".csv";
-    field<string> header(mean_value_results.n_cols);
-    header(1) = "E_mean"; header(2) = "E2_mean"; header(3) = "M_mean";
-    header(4) = "M_abs_mean"; header(5) = "M2_mean"; header(6) = "C_V";
-    header(7) = "chi"; header(0) = "Temperature";
-    writeGeneralMatrixToCSV(mean_value_results, header, filename, directory);
+        } // End parallel region. only one processor for I/O.
+        // Print wall time.
+        wtime = omp_get_wtime ( ) - wtime;
+        cout << "  Elapsed time in seconds = " << wtime << endl;
+        
+        // Save the results.
+        string directory = "../results/4f/";
+        string filename = stringTstart + "_" + stringTend + "_steps=" + to_string(int(Tsteps)) + "_L=" + to_string(L) + "_N=" + to_string(N_MC) + ".csv";
+        field<string> header(mean_value_results.n_cols);
+        header(0) = "Temperature"; header(1) = "E_mean"; header(2) = "E2_mean"; header(3) = "M_mean";
+        header(4) = "M_abs_mean"; header(5) = "M2_mean"; header(6) = "C_V";
+        header(7) = "chi"; 
+        writeGeneralMatrixToCSV(mean_value_results, header, filename, directory);
     }
+//end
 }
 
 /* // 4f: Multiple values of T.

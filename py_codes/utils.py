@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size': 22})
 import pandas as pd
 import os
+import re
 
 def energy_EV_analytical_2x2(T, J, kB):
     # Returns the analytical expectation value for the 2x2 case,
@@ -93,14 +94,14 @@ def plot_4c_ising():
 
 def plot_4d():
     directory = "../results/4d/"
-    filename = "4d_mean_values_vs_100000_cycles_T=1.0_ordered.csv"
+    filename = "4d_mean_values_vs_100000_cycles_T=2.4_ordered.csv"
     
     data = np.loadtxt(directory +filename, skiprows=1, delimiter=",")
     data = pd.DataFrame(data, columns=["MC_cycles", "E_mean", "E2_mean", "M_mean", "M_abs_mean",
                                        "M2_mean", "CV", "chi"])
     
     spinState = "ordered"
-    T = 1.0
+    T = 2.4
     L = 20.0
     L2 = L*L
     MC = data["MC_cycles"]
@@ -129,18 +130,16 @@ def plot_4d():
     #f.suptitle("20x20 spin matrix, initialised with random spins.")
     plt.savefig(directory + "{}_cycles_T={}_{}.pdf".format(N_MC, T, spinState))
 
-plot_4d()
-
 def plot_4d_flipRatio():
     ''' Plot the ration of flips accepted at each monte carlo
     cycle.
     '''
     directory = "../results/4d/"
-    filename = "4d_mean_values_vs_100000_cycles_T=1.0_ordered.csv"
+    filename = "4d_results_100000_T=2.4_ordered.csv"
     
-    data = np.loadtxt(directory +filename, skiprows=1, delimiter=",")
+    data = np.loadtxt(directory + filename, skiprows=1, delimiter=",")
     data = pd.DataFrame(data, columns=["MC_cycles", "E_mean", "E2_mean", "M_mean", "M_abs_mean",
-                                       "M2_mean", "CV", "chi", "flipsAccepted"])
+                                       "M2_mean", "flipsAccepted"])
     
     L = 20
     L2 = L*L
@@ -216,38 +215,40 @@ def plot_4f_cpp():
     i=0
     for filename in os.listdir(directory):
         if filename.endswith(".csv"):
+            print(filename)
             data = np.loadtxt(directory + filename, skiprows=1, delimiter=",")
             data = pd.DataFrame(data, columns=["T", "E_mean", "E2_mean", "M_mean", "M_abs_mean",
                                                "M2_mean", "CV", "chi"])
             
-            L = [40, 60, 80, 100]
+            L = re.findall('(?<=L=)[0-9]+',filename)
             
             T = data["T"]
             E = data["E_mean"]
             M = data["M_mean"]
             CV = data["CV"]
             chi = data["chi"]
+
             
             plt.subplot(221)
-            plt.plot(T, E, '.-', label="{}".format(L[i]))
+            plt.plot(T, E, '.-', label="{}".format(L))
             plt.xlabel("Temperature")
             plt.ylabel("Expectation Energy")
             plt.legend()
             
             plt.subplot(222)
-            plt.plot(T, M, '.-', label="{}".format(L[i]))
+            plt.plot(T, M, '.-', label="{}".format(L))
             plt.xlabel("Temperature")
             plt.ylabel("Expectation Magnetisation")
             plt.legend()
             
             plt.subplot(223)
-            plt.plot(T, CV, '.-', label="{}".format(L[i]))
+            plt.plot(T, CV, '.-', label="{}".format(L))
             plt.xlabel("Temperature")
-            plt.ylabel("Specific Heat")
+            plt.ylabel("Heat Capacity")
             plt.legend()
             
             plt.subplot(224)
-            plt.plot(T, chi, '.-', label="{}".format(L[i]))
+            plt.plot(T, chi, '.-', label="{}".format(L))
             plt.xlabel("Temperature")
             plt.ylabel("Magnetic Susceptibility")
             plt.legend()
@@ -255,8 +256,9 @@ def plot_4f_cpp():
             #f.suptitle("Expectation values for 100,000 Monte Carlo cycles for a 2x2 spin matrix. An additional 10% were added for equilibrium")
             f.tight_layout(pad=1.0)
             i+= 1
-    plt.savefig(directory + "MC=10^4_start=2.1_End=2.4_Steps=16.pdf")
-
+    plt.savefig(directory + "MC=10^3_start=2.1_End=2.4_Steps=16.pdf")
+    return
+plot_4f_cpp()
 def Z_analytical_2x2(J, kB, T):
     # The analytical expression of Z for a 2x2 spin lattice.
     beta = 1/float(kB*T); x = float(8*J*beta)

@@ -15,11 +15,10 @@ import utils as ut
 
 runCppCode = 0
 # Set to false if you have the results files and just want to plot the results.
-if runCppCode == True: 
+if runCppCode == True:
     # Compile and run the C++ files (this is exactly what is in the makefile):
     os.system("echo compiling C++ codes...")
-    #os.system("g++ -o main.out ../cpp_codes/main.cpp ../cpp_codes/utils.cpp ../cpp_codes/planet.cpp ../cpp_codes/solver.cpp -larmadillo")
-    os.system("g++ -O3 -o main.out ../cpp_codes/main.cpp ../cpp_codes/utils.cpp ../cpp_codes/ising_solver.cpp -larmadillo")
+    os.system("g++ -O3 -o main.out ../cpp_codes/main.cpp ../cpp_codes/utils.cpp ../cpp_codes/ising_solver.cpp -larmadillo -fopenmp")
     os.system("echo executing...")
     os.system("./main.out")
 
@@ -28,6 +27,7 @@ directory = "../results/4d/"
 
 # Mean values as function of # MC cycles:
 filename = "4d_mean_values_vs_MC_cycles.csv"
+#filename = "4d_mean_values_vs_1000_cycles_T=1.0_random"
 filePath = os.path.join(directory, filename) # The full file path.
 data = np.loadtxt(filePath, skiprows=1, delimiter=",")
 # Get the columns of data as lists:
@@ -44,16 +44,18 @@ chi_list = data["chi"].tolist()
 
 # E_list and M_list:
 filename = "4d_E_list_M_list.csv"
+#filename = "4d_results_1000_T=1.0_random.csv"
 filePath = os.path.join(directory, filename) # The full file path.
 data = np.loadtxt(filePath, skiprows=1, delimiter=",")
 # Get the columns of data as lists:
-data = pd.DataFrame(data, columns=["MC_cycle", "E", "E2", "M", "M_abs", "M2"])
+data = pd.DataFrame(data, columns=["MC_cycle", "E", "E2", "M", "M_abs", "M2", "flips_accepted"])
 MC_cycle_list2 = data["MC_cycle"].tolist() # tolist() converts dataframe to a list.
 E_list = data["E"].tolist()
 E2_list = data["E2"].tolist()
 M_list = data["M"].tolist()
 M_abs_list = data["M_abs"].tolist()
 M2_list = data["M2"].tolist()
+flips_accepted_list = data["flips_accepted"].tolist()
 
 
 # Plot the results:

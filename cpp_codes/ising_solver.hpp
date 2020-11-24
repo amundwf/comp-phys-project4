@@ -10,7 +10,7 @@
 
 class IsingSolver{
 private:
-    double L; // This is the number of rows and columns of the spin matrix.
+    int L; // This is the number of rows and columns of the spin matrix.
     // Assuming quadratic (LxL) spin matrix.
 
     double T; // The current temperature of the system
@@ -21,7 +21,7 @@ private:
 
     int N_MC; // Chosen number of Monte Carlo cycles to run the metropolis algorithm.
     int N1_MC; // Equil. cycles subtracted. 
-    double L2; // L squared. 
+    int L2; // L squared. 
     
     // The solver needs to calculate these quantities:
     double E;       // The current energy of the system.
@@ -52,14 +52,13 @@ private:
     double M2_total;
     
     arma::imat spinMatrix;  // This is the current spin lattice.
-    arma::imat PBC_spinMatrix; // N+2 x N+2 matrix (containing periodic boundary
-    // conditions along the edges of the matrix).
-
-    void make_PBC_spinMatrix(); // Makes the PBC matrix from spinMatrix.
+    //arma::imat PBC_spinMatrix;
+    //void make_PBC_spinMatrix(); // Makes the PBC matrix from spinMatrix.
 
     arma::Col<int> dE_values; // Contains the 5 possible values of dE.
     arma::vec weights; // Contains the corresponding 5 possible values of e^{-beta*dE}.
     void set_dE_values_and_weights();
+    int PBC_idx(int idx); // Get periodic boundary condition indices.
 public:
     // Constructor with a spin state matrix as input:
     IsingSolver(arma::imat spinMatrix, double T, int N_MC);
@@ -87,8 +86,12 @@ public:
 
     // Running the metropolis algorithm:
     void metropolis_one_time(); // Run the Metropolis algorithm one time (one MC cycle?)
+    void metropolis_one_time_v2(); // Testing, debugging
+    void metropolis_one_MC_cycle();
+
     void metropolis_one_time_and_update_E_M_lists(int list_idx);
     void run_metropolis_full(); // Run the Metropolis algorithm for N_MC MC cycles
+    void run_metropolis_full_v2();
     void metropolis_one_time_parallel(); // add to the mean each cycle.
 };
 #endif

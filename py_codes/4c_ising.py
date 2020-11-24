@@ -13,13 +13,13 @@ import re
 import os
 import utils as ut
 
-runCppCode = 1
+runCppCode = 0
 # Set to false if you have the results files and just want to plot the results.
 if runCppCode == True: 
     # Compile and run the C++ files (this is exactly what is in the makefile):
     os.system("echo compiling C++ codes...")
-    #os.system("g++ -o main.out ../cpp_codes/main.cpp ../cpp_codes/utils.cpp ../cpp_codes/planet.cpp ../cpp_codes/solver.cpp -larmadillo")
-    os.system("g++ -O3 -o main.out ../cpp_codes/main.cpp ../cpp_codes/utils.cpp ../cpp_codes/ising_solver.cpp -larmadillo")
+    #os.system("g++ -O3 -o main.out ../cpp_codes/main.cpp ../cpp_codes/utils.cpp ../cpp_codes/ising_solver.cpp -larmadillo")
+    os.system("g++ -O3 -o main.out ../cpp_codes/main.cpp ../cpp_codes/utils.cpp ../cpp_codes/ising_solver.cpp -larmadillo -fopenmp")
     os.system("echo executing...")
     os.system("./main.out")
 
@@ -82,9 +82,9 @@ print("chi: ", chi_analytical)
 #plotCodeWord = "E_list"
 plotCodeWord = "M_list"
 
-labelSize = 13
-titleSize = 12
-markerSize = 2.5
+labelSize = 12
+titleSize = 13
+markerSize = 6
 
 if plotCodeWord == "E_list":
     # Plot E_list

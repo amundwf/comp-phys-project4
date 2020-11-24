@@ -12,9 +12,9 @@ int main(){
 
     //run_4c_ising();
 
-    //run_4d_most_likely_state();
+    run_4d_most_likely_state();
 
-    run_4f();
+    //run_4f();
 
     return 0;
 }

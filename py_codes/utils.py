@@ -92,79 +92,265 @@ def plot_4c_ising():
     print("CV", CV)
     print("chi", chi)
 
-def plot_4d():
+def plot_4d_histogram():
     directory = "../results/4d/"
-    filename = "4d_mean_values_vs_100000_cycles_T=2.4_ordered.csv"
-    
-    data = np.loadtxt(directory +filename, skiprows=1, delimiter=",")
-    data = pd.DataFrame(data, columns=["MC_cycles", "E_mean", "E2_mean", "M_mean", "M_abs_mean",
-                                       "M2_mean", "CV", "chi"])
-    
-    spinState = "ordered"
-    T = 2.4
-    L = 20.0
-    L2 = L*L
-    MC = data["MC_cycles"]
-    N_MC = len(data['MC_cycles'])
-    E_mean = data["E_mean"]
-    E2_mean = data["E2_mean"]
-    M_mean = data["M_mean"]
-    M2_mean = data["M2_mean"]
-    Mabs_mean = data["M_abs_mean"]
-    
-    f = plt.figure(figsize=(18, 10), dpi=80, facecolor='w', edgecolor='k')
-    
-    plt.subplot(211)
-    plt.plot(MC, E_mean/L2, '.')
-    plt.xscale("log")
-    plt.xlabel("Monte Carlo cycles")
-    plt.ylabel("Expectation Energy")
-    
-    plt.subplot(212)
-    plt.plot(MC, Mabs_mean/L2, '.')
-    plt.xscale("log")
-    plt.xlabel("Monte Carlo cycles")
-    plt.ylabel("Expectation Magnetisation")
-    
-    f.tight_layout(pad=1.0)
-    #f.suptitle("20x20 spin matrix, initialised with random spins.")
-    plt.savefig(directory + "{}_cycles_T={}_{}.pdf".format(N_MC, T, spinState))
+ 
+    for filename in os.listdir(directory):
+        if filename.endswith(".csv"):
+            print(filename)
+            data = np.loadtxt(directory +filename, skiprows=1, delimiter=",")
+            data = pd.DataFrame(data, columns=["MC_cycles", "E", "E2", "M", "M_abs",
+                                               "M2", "flipsAccepted"])
+            if re.search('random', filename):
+                spinState = "random"
+            if re.search('ordered', filename):
+                spinState = "ordered"
+                
+            T = re.findall('(?<=T=)[0-9].[0-9]+',filename)
+            T = T[0] # take the only value in list.
+            L = 20.0
+            L2 = L*L
+            MC = data["MC_cycles"]
+            N_MC = len(data['MC_cycles']) - 1
+            E = data["E"]
+            E2 = data["E2"]
+            M = data["M"]
+            M2 = data["M2"]
+            Mabs = data["M_abs"]
+            
+            
+            
+            f = plt.figure(figsize=(18, 15), dpi=80, facecolor='w', edgecolor='k')
+            E = E[20000:]
+            E2 = E2[20000:]
+            E_mean = np.mean(E)
+            E_var = np.var(E)
+            E2_mean = np.mean(E2)
+            sigma2 = E2_mean - E_mean*E_mean
+            
+            # divide by L2
+            E_mean /= L2
+            E /= L2
+            sigma2 /= L2
+            E_var /= L2
+            
+            weights = np.ones_like(E) / (len(E))
+            n, bins, patches = plt.hist(E, bins = 20, weights = weights, label = "T = {}".format(T))
+            plt.xlabel("Energy")
+            plt.ylabel("P[E]")
+            plt.legend(loc="best")
+            f.suptitle("Probability Density of the Energy\n with mean = {:.3f} and variance = {:.6f}.\n $E[E^2] - E[E]^2 = \u03C3^2_E$ = {:.6f}".format(E_mean, E_var, sigma2))
+            plt.savefig(directory + "{}_cycles_T={}_{}.pdf".format(N_MC, T, spinState))
+            plt.close()
+    return
 
-def plot_4d_flipRatio():
+
+def plot_4d():
+    
+    directory = "../results/4d/mean_results/"
+ 
+    for filename in os.listdir(directory):
+        if filename.endswith(".csv"):
+    
+            data = np.loadtxt(directory +filename, skiprows=1, delimiter=",")
+            data = pd.DataFrame(data, columns=["MC_cycles", "E_mean", "E2_mean", "M_mean", "M_abs_mean",
+                                               "M2_mean", "CV", "chi"])
+            if re.search('random', filename):
+                spinState = "random"
+            if re.search('ordered', filename):
+                spinState = "ordered"
+                
+            T = re.findall('(?<=T=)[0-9].[0-9]+',filename)
+            T = T[0] # take the only value in list.
+            T = float(T)
+            L = 20.0
+            L2 = L*L
+            MC = data["MC_cycles"]
+            N_MC = len(data['MC_cycles'])
+            E_mean = data["E_mean"]
+            E2_mean = data["E2_mean"]
+            M_mean = data["M_mean"]
+            M2_mean = data["M2_mean"]
+            Mabs_mean = data["M_abs_mean"]
+            
+            
+            ### MAKE PLOTS
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10), dpi = 80)
+            
+            ################ ENERGY 
+            ax1.plot(MC, E_mean/L2, '.')
+            #plt.xscale("log")
+            ax1.set_xlabel("Monte Carlo cycles")
+            ax1.set_ylabel("Expectation Energy")
+            
+            if T == 1.0:
+                ax1.set_ylim(-2.1, -0.3)
+                
+                if spinState == "ordered":
+                    # inset axes....
+                    axins = ax1.inset_axes([0.25, 0.3, 0.7, 0.5])
+                    axins.plot(MC[10000:], E_mean[10000:]/L2, '.')
+                    # sub region of the original image
+                    x1, x2, y1, y2 = 10000, 100000, -2.00, -1.99
+                    axins.set_xlim(x1, x2)
+                    axins.set_ylim(y1, y2)
+                    axins.set_xticklabels('')
+                    axins.set_yticklabels(axins.get_yticks(), backgroundcolor='w')
+                    ax1.indicate_inset_zoom(axins)
+                    
+                if spinState == "random":
+                    # inset axes...
+                    axins = ax1.inset_axes([0.25, 0.3, 0.7, 0.5])
+                    axins.plot(MC[10000:], E_mean[10000:]/L2, '.')
+                    # sub region of the original image
+                    x1, x2, y1, y2 = 10000, 100000, -1.86, -1.85
+                    axins.set_xlim(x1, x2)
+                    axins.set_ylim(y1, y2)
+                    axins.set_xticklabels('')
+                    axins.set_yticklabels(axins.get_yticks(), backgroundcolor='w')
+                    ax1.indicate_inset_zoom(axins)
+            else: 
+                ax1.set_ylim(-1.5, -0.8)
+                if spinState == "ordered":
+                    # inset axes....
+                    axins = ax1.inset_axes([0.25, 0.3, 0.67, 0.47])
+                    axins.plot(MC[10000:], E_mean[10000:]/L2, '.')
+                    # sub region of the original image
+                    x1, x2, y1, y2 = 10000, 100000, -1.38, -1.37
+                    axins.set_xlim(x1, x2)
+                    axins.set_ylim(y1, y2)
+                    axins.set_xticklabels('')
+                    axins.set_yticklabels(axins.get_yticks(), backgroundcolor='w')
+                    ax1.indicate_inset_zoom(axins)
+                    
+                if spinState == "random":
+                    # inset axes....
+                    axins = ax1.inset_axes([0.25, 0.05, 0.67, 0.47])
+                    axins.plot(MC[10000:], E_mean[10000:]/L2, '.')
+                    # sub region of the original image
+                    x1, x2, y1, y2 = 10000, 100000, -1.12, -1.11
+                    axins.set_xlim(x1, x2)
+                    axins.set_ylim(y1, y2)
+                    axins.set_xticklabels('')
+                    axins.set_yticklabels(axins.get_yticks(), backgroundcolor='w')
+                    ax1.indicate_inset_zoom(axins)
+            
+            
+            
+            ########## MAGNETISATION
+            
+        
+            ax2.plot(MC, Mabs_mean/L2, '.')
+            #plt.xscale("log")
+            ax2.set_xlabel("Monte Carlo cycles")
+            ax2.set_ylabel("Expectation Magnetisation")
+            
+            if T == 1.0:
+                ax2.set_ylim(0, 1.1)
+                
+                if spinState == "ordered":
+                    # inset axes....
+                    axins = ax2.inset_axes([0.3, 0.2, 0.67, 0.47])
+                    axins.plot(MC[10000:], Mabs_mean[10000:]/L2, '.')
+                    # sub region of the original image
+                    x1, x2, y1, y2 = 10000, 100000, 0.9992, 0.9994
+                    axins.set_xlim(x1, x2)
+                    axins.set_ylim(y1, y2)
+                    #axins.set_xticklabels('')
+                    axins.set_xticklabels('')
+                    axins.set_yticklabels(axins.get_yticks(), backgroundcolor='w')
+                    
+                    ax2.indicate_inset_zoom(axins)
+                    
+                if spinState == "random":
+                    axins = ax2.inset_axes([0.3, 0.2, 0.67, 0.47])
+                    axins.plot(MC[10000:], Mabs_mean[10000:]/L2, '.')
+                    # sub region of the original image
+                    x1, x2, y1, y2 = 10000, 100000, 0.93, 0.96
+                    axins.set_xlim(x1, x2)
+                    axins.set_ylim(y1, y2)
+                    #axins.set_xticklabels('')
+                    axins.set_xticklabels('')
+                    axins.set_yticklabels(axins.get_yticks(), backgroundcolor='w')
+                    
+                    ax2.indicate_inset_zoom(axins)
+            else: 
+                ax2.set_ylim(0, 0.9)
+                
+                if spinState == "ordered":
+                    # inset axes....
+                    axins = ax2.inset_axes([0.3, 0.2, 0.67, 0.47])
+                    axins.plot(MC[10000:], Mabs_mean[10000:]/L2, '.')
+                    # sub region of the original image
+                    x1, x2, y1, y2 = 10000, 100000, 0.66, 0.75
+                    axins.set_xlim(x1, x2)
+                    axins.set_ylim(y1, y2)
+                    #axins.set_xticklabels('')
+                    axins.set_xticklabels('')
+                    axins.set_yticklabels(axins.get_yticks(), backgroundcolor='w')
+                    
+                    ax2.indicate_inset_zoom(axins)
+                    
+                if spinState == "random":
+                    axins = ax2.inset_axes([0.3, 0.4, 0.67, 0.47])
+                    axins.plot(MC[10000:], Mabs_mean[10000:]/L2, '.')
+                    # sub region of the original image
+                    x1, x2, y1, y2 = 10000, 100000, 0.22, 0.26
+                    axins.set_xlim(x1, x2)
+                    axins.set_ylim(y1, y2)
+                    #axins.set_xticklabels('')
+                    axins.set_xticklabels('')
+                    axins.set_yticklabels(axins.get_yticks(), backgroundcolor='w')
+                    
+                    ax2.indicate_inset_zoom(axins)
+                
+            
+            
+            
+
+            #f.suptitle("{} configuration at T = {}".format(spinState, T))
+            #f.tight_layout(pad=2.0)
+            
+            #plt.savefig(directory + "{}_cycles_T={:.1f}_{}.pdf".format(N_MC, T, spinState))
+            plt.savefig(directory + "{}_cycles_T={:.1f}_{}.png".format(N_MC, T, spinState))
+            plt.close()
+
+def plot_4d_flips():
     ''' Plot the ration of flips accepted at each monte carlo
     cycle.
     '''
     directory = "../results/4d/"
-    filename = "4d_results_100000_T=2.4_ordered.csv"
-    
-    data = np.loadtxt(directory + filename, skiprows=1, delimiter=",")
-    data = pd.DataFrame(data, columns=["MC_cycles", "E_mean", "E2_mean", "M_mean", "M_abs_mean",
-                                       "M2_mean", "flipsAccepted"])
-    
-    L = 20
-    L2 = L*L
-    MC = data["MC_cycles"]
-    N_MC = len(data['MC_cycles'])
-    flipsAccepted = data["flipsAccepted"]
-
-    
     f = plt.figure(figsize=(18, 10), dpi=80, facecolor='w', edgecolor='k')
-
-    plt.plot(MC, flipsAccepted/L2, '.')
-    plt.xscale("log")
-    plt.xlabel("Monte Carlo cycles")
-    plt.ylabel("Accepted configurations / Total configurations")
     
-    f.tight_layout(pad=1.0)
-    #f.suptitle("20x20 spin matrix, initialised with random spins.")
-    #plt.savefig(directory + "flipRatio.pdf")
+    for filename in os.listdir(directory):
+        if filename.endswith(".csv"):
+            data = np.loadtxt(directory + filename, skiprows=1, delimiter=",")
+            data = pd.DataFrame(data, columns=["MC_cycles", "E_mean", "E2_mean", "M_mean", "M_abs_mean",
+                                       "M2_mean", "flipsAccepted"])
+
+            T = re.findall('(?<=T=)[0-9].[0-9]+',filename)
+            T = T[0] # take the only value in list.
+            L = 20
+            L2 = L*L
+            MC = data["MC_cycles"]
+            N_MC = len(data['MC_cycles'])
+            flipsAccepted = data["flipsAccepted"]
+
+            plt.plot(MC, flipsAccepted/L2, '.-', label="T = {}".format(T))
+            plt.xscale("log")
+            plt.xlabel("Monte Carlo cycles")
+            plt.ylabel("Accepted spins flips / Total possible flips")
+            plt.legend()
+            #f.tight_layout(pad=1.0)
+            f.suptitle("The number of accepted spins to be flipped divided by the total possible.\n The 20 x 20 spin matrix was initialised with random orientations")
+    plt.savefig(directory + "accepted_flips.pdf")
     
     return
-plot_4d_flipRatio()
+
 def plot_4f_python():
         
     directory = "C:/github/Ising/"
-    i = 0
+    
     f = plt.figure(figsize=(18, 10), dpi=80, facecolor='w', edgecolor='k')
     for filename in os.listdir(directory):
             if filename.endswith(".csv"):
@@ -172,7 +358,9 @@ def plot_4f_python():
                 data = np.loadtxt(directory + filename, skiprows=1, delimiter=",")
                 data = pd.DataFrame(data, columns=["Empty", "T", "E", "M", "CV", "Susc"])
                 
-                L = [40, 60, 80, 100]
+                L = re.findall('(?<=N=)[0-9]+',filename)
+                L = L[0]
+                #L2 = L*L
                 T = data["T"]
                 E = data["E"]
                 M = data["M"]
@@ -180,32 +368,31 @@ def plot_4f_python():
                 chi = data["Susc"]
                 
                 plt.subplot(221)
-                plt.plot(T, E, '.-', label="{}".format(L[i]))
+                plt.plot(T, E, '.-', label="{}".format(L))
                 plt.xlabel("Temperature")
                 plt.ylabel("Expectation Energy")
                 plt.legend()
                 
                 plt.subplot(222)
-                plt.plot(T, M, '.-', label="{}".format(L[i]))
+                plt.plot(T, M, '.-', label="{}".format(L))
                 plt.xlabel("Temperature")
                 plt.ylabel("Expectation Magnetisation")
                 plt.legend()
                 
                 plt.subplot(223)
-                plt.plot(T, CV , '.-', label="{}".format(L[i]))
+                plt.plot(T, CV/float(L) , '.-', label="{}".format(L))
                 plt.xlabel("Temperature")
                 plt.ylabel("Specific Heat")
                 plt.legend()
                 
                 plt.subplot(224)
-                plt.plot(T, chi , '.-', label="{}".format(L[i]))
+                plt.plot(T, chi/float(L) , '.-', label="{}".format(L))
                 plt.xlabel("Temperature")
                 plt.ylabel("Magnetic Susceptibility")
                 plt.legend()
+                f.tight_layout(pad=1.0)
                 
-                f.suptitle("Expectation values for 100,000 Monte Carlo cycles for a 2x2 spin matrix. An additional 10% were added for equilibrium")
-                i += 1
-    plt.savefig(directory + "Ising_100,000.png")
+    plt.savefig(directory + "python_2.0_2.5_10.pdf")
     
 def plot_4f_cpp():
         
@@ -220,42 +407,42 @@ def plot_4f_cpp():
                                                "M2_mean", "CV", "chi"])
             
             L = re.findall('(?<=L=)[0-9]+',filename)
-            
+            L = L[0]
             T = data["T"]
-            E = data["E_mean"]
-            M = data["M_mean"]
+            E_mean = data["E_mean"]
+            M_mean = data["M_abs_mean"]
             CV = data["CV"]
             chi = data["chi"]
 
             
             plt.subplot(221)
-            plt.plot(T, E, '.-', label="{}".format(L))
+            plt.plot(T, E_mean, '.-', label="{}".format(L))
             plt.xlabel("Temperature")
             plt.ylabel("Expectation Energy")
-            plt.legend()
+            plt.legend(loc="best")
             
             plt.subplot(222)
-            plt.plot(T, M, '.-', label="{}".format(L))
+            plt.plot(T, M_mean, '.-', label="{}".format(L))
             plt.xlabel("Temperature")
             plt.ylabel("Expectation Magnetisation")
-            plt.legend()
+            plt.legend(loc="best")
             
             plt.subplot(223)
             plt.plot(T, CV, '.-', label="{}".format(L))
             plt.xlabel("Temperature")
             plt.ylabel("Heat Capacity")
-            plt.legend()
+            plt.legend(loc="best")
             
             plt.subplot(224)
             plt.plot(T, chi, '.-', label="{}".format(L))
             plt.xlabel("Temperature")
             plt.ylabel("Magnetic Susceptibility")
-            plt.legend()
+            plt.legend(loc="best")
             
             #f.suptitle("Expectation values for 100,000 Monte Carlo cycles for a 2x2 spin matrix. An additional 10% were added for equilibrium")
             f.tight_layout(pad=1.0)
             i+= 1
-    plt.savefig(directory + "MC=10^3_start=2.1_End=2.4_Steps=16.pdf")
+    plt.savefig(directory + "MC=10^5_start=2.2_End=2.35_Steps=32.pdf")
     return
 
 def Z_analytical_2x2(J, kB, T):

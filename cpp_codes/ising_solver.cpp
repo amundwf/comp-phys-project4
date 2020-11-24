@@ -8,6 +8,7 @@
 using namespace std;
 using namespace arma;
 
+/*
 void IsingSolver::make_PBC_spinMatrix(){
     // This function is used inside the constructor IsingSolver(imat spinMatrix).
     // In that constructor, squareMatrix and L are set before this function is called,
@@ -29,6 +30,7 @@ void IsingSolver::make_PBC_spinMatrix(){
     // Lower horizontal edge side:
     PBC_spinMatrix(L+1, span(1,L)) = spinMatrix(0, span(0,L-1));
 }
+*/
 
 void IsingSolver::set_dE_values_and_weights(){
     // This function sets dE_values and pre-calculates weights.
@@ -59,8 +61,7 @@ IsingSolver::IsingSolver(imat spinMatrix, double T, int N_MC){
     
     L = spinMatrix.n_rows;
     this->L2 = L*L;
-    // Set the PBC matrix (by using the newly set spinMatrix):
-    make_PBC_spinMatrix();
+
     // Set the 5 dE values and corresponding weights (Boltzmann PDE):
     set_dE_values_and_weights();
 
@@ -112,8 +113,6 @@ IsingSolver::IsingSolver(int L, double T, int N_MC){
     // Convert to integer matrix:
     spinMatrix = conv_to<imat>::from(randMatrix);
 
-    // Set the PBC matrix (by using the newly set spinMatrix):
-    make_PBC_spinMatrix();
     // Set the 5 dE values and corresponding weights (Boltzmann PDE):
     set_dE_values_and_weights();
 
@@ -155,9 +154,19 @@ void IsingSolver::print_spinMatrix(){
     spinMatrix.print("spinMatrix:");
 }
 
+/*
 void IsingSolver::print_PBCSpinMatrix(){
     // This function prints the current PBC_spinMatrix.
     PBC_spinMatrix.print("PBC_spinMatrix:");
+}
+*/
+
+int IsingSolver::PBC_idx(int idx){
+    // This function enables periodic boundary conditions for
+    // an LxL lattice.
+    // idx=-1 returns the index L-1, and idx=L returns the index 0, 
+    // satisfying the PBC.
+    return (L+idx)%L;
 }
 
 void IsingSolver::print_E_list_and_M_list(){
@@ -211,6 +220,7 @@ int IsingSolver::calculate_M(){
 	return M;
 }
 
+/*
 double IsingSolver::calculate_E(){
 	// This function calculates the energy of the current spin lattice, replaces
 	// the energy member variable E, and also returns this energy.
@@ -246,6 +256,44 @@ double IsingSolver::calculate_E(){
 		}
 	}
 
+	E *= -J; // Multiply with the factor -J to get the correct energy. 
+	this->E = E;
+	return E;
+} */
+double IsingSolver::calculate_E(){
+	// This function calculates the energy of the current spin lattice, replaces
+	// the energy member variable E, and also returns this energy.
+	// Go through each element in the PBC spin matrix. 
+	double E = 0;
+	double E_currentSpin = 0; // Temp variable for the energy of each spin.
+
+	// Remember that the PBC spin matrix has slightly different indices compared
+	// to spinMatrix due to its increased size ((L+2)x(L+2)).
+	int s1; // The spin value of the current spin in a row or column.
+	int s0; // The spin value of the previous spin (in a row or a column).
+
+	// The total energy will be calculated by first getting the energy from the row
+	// strings of spins and then getting the energy from the column strings of spins:
+
+	// Get the energy sum of all of the row strings:
+	for (int r=0; r<=L-1; r++){ // For each row, get the binding energies between the
+	// spins in that row.
+		for (int c=0; c<=L-1; c++){ // Column number. Include the last element (index
+		// L+1) for the periodic boundary conditions.
+			s1 = spinMatrix(r,c);
+			s0 = spinMatrix(r, PBC_idx(c-1)); // Previous spin in row
+			E += s1*s0;
+		}
+	}
+	// Get the energy sum of all of the column strings:
+	for (int c=0; c<=L-1; c++){ // For each column, get the binding energies between the
+	// spins in that column.
+		for (int r=0; r<=L-1; r++){ // Row number
+			s1 = spinMatrix(r,c);
+			s0 = spinMatrix(PBC_idx(r-1), c); // Previous spin in column
+			E += s1*s0;
+		}
+	}
 	E *= -J; // Multiply with the factor -J to get the correct energy. 
 	this->E = E;
 	return E;
@@ -314,6 +362,7 @@ Row<double> IsingSolver::get_mean_results(){
     return MVs_array;
 }
 
+/*
 void IsingSolver::metropolis_one_time(){
     // This function runs the Metropolis algorithm one time (one MC cycle?)
     // (See the metropolis algorithm implementation in the lecture notes p. 438)
@@ -342,10 +391,77 @@ void IsingSolver::metropolis_one_time(){
                 // Also update the energy and magnetisation:
                 E += dE;
                 M += 2*PBC_spinMatrix(iy,ix);
-                
             }
         }
     }
+}
+*/
+
+void IsingSolver::metropolis_one_time(){
+    // This function runs the Metropolis algorithm one time (one MC cycle?)
+    // (See the metropolis algorithm implementation in the lecture notes p. 438)
+    int N_spins = L2;
+    //int N_spins = 1;
+    for (int i=1; i<=N_spins; i++){
+        int iy = randrange_int(0, L-1);
+        int ix = randrange_int(0, L-1);
+        // Calculate the energy difference that would be caused by flipping
+        // the spin at matrix indices (iy,ix):
+        int dE = 2*spinMatrix(iy,ix)*
+            (spinMatrix(iy, PBC_idx(ix-1)) + spinMatrix(iy, PBC_idx(ix+1))
+            + spinMatrix(PBC_idx(iy-1), ix) + spinMatrix(PBC_idx(iy+1), ix));
+            // ^ A sum over the four nearest neighbours.
+
+        // Now perform the Metropolis test using dE:
+        double w = weights(dE+8); // Get the weight corresponding to dE (without
+        // needing to calculate the exponential).
+        double randNum = randrange_float(0,1); // Uniformly random double between 0 and 1.
+        if (randNum <= w){ // If the weight is larger than the random number, the spin flip
+            // is acceptable. Therefore, perform the spin flip.
+            //PBC_spinMatrix(iy,ix) *= -1;
+            spinMatrix(iy,ix) *= -1;
+            // Also update the energy and magnetisation:
+            E += dE;
+            M += 2*spinMatrix(iy,ix);
+        }
+    }
+}
+
+/*
+void IsingSolver::run_metropolis_full_v2(){
+    // This function runs metropolis_one_time() many times (N_MC number of times).
+    
+    for (int i=1; i<=N_MC; i++){ // N_MC times:
+        // Run one MC cycle:
+        metropolis_one_MC_cycle();
+        
+        // Add the new energy and magnetisation to the lists of E and M (as
+        // functions of # MC cycles):
+        E_list(i) = E; M_list(i) = M; E2_list(i) = E*E; M2_list(i) = M*M;
+        M_abs_list(i)= fabs(M);
+    }
+
+    // Now that the metropolis algorithm has been run, calculate
+    // and update the expectated value quantities:
+    calculate_mean_results();
+}
+*/
+
+void IsingSolver::run_metropolis_full(){
+    // This function runs metropolis_one_time() many times (N_MC number of times).
+
+    for (int i=1; i<=N_MC; i++){ // N_MC times:
+        // Run one MC cycle:
+        metropolis_one_time();
+        
+        // Add the new energy and magnetisation to the lists of E and M (as
+        // functions of # MC cycles):
+        E_list(i) = E; M_list(i) = M; E2_list(i) = E*E; M2_list(i) = M*M;
+        M_abs_list(i)= fabs(M);
+    }
+    // Now that the metropolis algorithm has been run, calculate
+    // and update the expectated value quantities:
+    calculate_mean_results();
 }
 
 void IsingSolver::metropolis_one_time_and_update_E_M_lists(int list_idx){
@@ -354,32 +470,31 @@ void IsingSolver::metropolis_one_time_and_update_E_M_lists(int list_idx){
     // int list_idx: Current list index of E_list, E2_list, etc. corresponding to
     // the current MC cycle.
     int flipsAccepted = 0;
-    for (int y=0; y<=L-1; y++){ // Go through all spins (but pick a random position
-    // each time).
-        for (int x=0; x<=L-1; x++){
-            // Get a random position in the (PBC) lattice:
-            int iy = randrange_int(1, L);
-            int ix = randrange_int(1, L);
+    int N_spins = L2;
 
-            // Calculate the energy difference that would be caused by flipping
-            // the spin at matrix indices (iy,ix):
-            int dE = 2*PBC_spinMatrix(iy,ix)*
-                (PBC_spinMatrix(iy,ix-1) + PBC_spinMatrix(iy,ix+1)
-                + PBC_spinMatrix(iy-1,ix) + PBC_spinMatrix(iy+1,ix));
-                // ^ A sum over the four nearest neighbours.
+    for (int i=1; i<=N_spins; i++){
+        // Get a random position in the (PBC) lattice:
+        int iy = randrange_int(0, L-1);
+        int ix = randrange_int(0, L-1);
 
-            // Now perform the Metropolis test using dE:
-            double w = weights(dE+8); // Get the weight corresponding to dE (without
-            // needing to calculate the exponential).
-            double randNum = randrange_float(0,1); // Uniformly random double between 0 and 1.
-            if (randNum <= w){ // If the weight is larger than the random number, the spin flip
-                // is acceptable. Therefore, perform the spin flip.
-                PBC_spinMatrix(iy,ix) *= -1; spinMatrix(iy-1,ix-1) *= -1; 
-                // Also update the energy and magnetisation:
-                E += dE;
-                M += 2*PBC_spinMatrix(iy,ix);
-                flipsAccepted += 1;
-            }
+        // Calculate the energy difference that would be caused by flipping
+        // the spin at matrix indices (iy,ix):
+        int dE = 2*spinMatrix(iy,ix)*
+            (spinMatrix(iy, PBC_idx(ix-1)) + spinMatrix(iy, PBC_idx(ix+1))
+            + spinMatrix(PBC_idx(iy-1), ix) + spinMatrix(PBC_idx(iy+1), ix));
+            // ^ A sum over the four nearest neighbours.
+
+        // Now perform the Metropolis test using dE:
+        double w = weights(dE+8); // Get the weight corresponding to dE (without
+        // needing to calculate the exponential).
+        double randNum = randrange_float(0,1); // Uniformly random double between 0 and 1.
+        if (randNum <= w){ // If the weight is larger than the random number, the spin flip
+            // is acceptable. Therefore, perform the spin flip.
+            spinMatrix(iy,ix) *= -1;
+            // Also update the energy and magnetisation:
+            E += dE;
+            M += 2*spinMatrix(iy,ix);
+            flipsAccepted += 1;
         }
     }
     // Add the new energy and magnetisation to the lists of E and M (as
@@ -388,6 +503,7 @@ void IsingSolver::metropolis_one_time_and_update_E_M_lists(int list_idx){
     M_abs_list(list_idx)= fabs(M); flipsAccepted_list(list_idx) = flipsAccepted;
 }
 
+/*
 void IsingSolver::run_metropolis_full(){
     // This function runs metropolis_one_time() many times (N_MC number of times).
 
@@ -405,6 +521,7 @@ void IsingSolver::run_metropolis_full(){
     // and update the expectated value quantities:
     calculate_mean_results();
 }
+*/
 
 void IsingSolver::init_parallel_variables(){
     // Set all variables to zero. 
@@ -420,31 +537,29 @@ void IsingSolver::metropolis_one_time_parallel(){
     // etc. in E_list, E2_list, M_list, ... respectively, for one index value.
     // int list_idx: Current list index of E_list, E2_list, etc. corresponding to
     // the current MC cycle.
-    for (int y=0; y<=L-1; y++){ // Go through all spins (but pick a random position
-    // each time).
-        for (int x=0; x<=L-1; x++){
-            // Get a random position in the (PBC) lattice:
-            int iy = randrange_int(1, L);
-            int ix = randrange_int(1, L);
 
-            // Calculate the energy difference that would be caused by flipping
-            // the spin at matrix indices (iy,ix):
-            int dE = 2*PBC_spinMatrix(iy,ix)*
-                (PBC_spinMatrix(iy,ix-1) + PBC_spinMatrix(iy,ix+1)
-                + PBC_spinMatrix(iy-1,ix) + PBC_spinMatrix(iy+1,ix));
-                // ^ A sum over the four nearest neighbours.
+    int N_spins = L2;
+    for (int i=1; i<=N_spins; i++){
+        // Get a random position in the (PBC) lattice:
+        int iy = randrange_int(0, L-1);
+        int ix = randrange_int(0, L-1);
 
-            // Now perform the Metropolis test using dE:
-            double w = weights(dE+8); // Get the weight corresponding to dE (without
-            // needing to calculate the exponential).
-            double randNum = randrange_float(0,1); // Uniformly random double between 0 and 1.
-            if (randNum <= w){ // If the weight is larger than the random number, the spin flip
-                // is acceptable. Therefore, perform the spin flip.
-                PBC_spinMatrix(iy,ix) *= -1; spinMatrix(iy-1,ix-1) *= -1; 
-                // Also update the energy and magnetisation:
-                E += dE;
-                M += 2*PBC_spinMatrix(iy,ix);
-            }
+        // Calculate the energy difference that would be caused by flipping
+        // the spin at matrix indices (iy,ix):
+        int dE = 2*spinMatrix(iy,ix)*
+            (spinMatrix(iy, PBC_idx(ix-1)) + spinMatrix(iy, PBC_idx(ix+1))
+            + spinMatrix(PBC_idx(iy-1), ix) + spinMatrix(PBC_idx(iy+1), ix));
+
+        // Now perform the Metropolis test using dE:
+        double w = weights(dE+8); // Get the weight corresponding to dE (without
+        // needing to calculate the exponential).
+        double randNum = randrange_float(0,1); // Uniformly random double between 0 and 1.
+        if (randNum <= w){ // If the weight is larger than the random number, the spin flip
+            // is acceptable. Therefore, perform the spin flip.
+            spinMatrix(iy,ix) *= -1; 
+            // Also update the energy and magnetisation:
+            E += dE;
+            M += 2*spinMatrix(iy,ix);
         }
     }
     // Add the new energy and magnetisation to the lists of E and M (as

@@ -14,6 +14,8 @@ import re
 
 #utils.plot_4f_python()
 
-utils.plot_4d()
+#utils.plot_4d()
 
 #utils.plot_4d_flips()
+
+utils.calc_4g()

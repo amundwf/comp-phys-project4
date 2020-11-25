@@ -158,7 +158,7 @@ void run_4c_ising(){
 
 void run_4d_most_likely_state(){
     int L = 20;
-    int N_MC = 1000000;
+    int N_MC = 100000;
     // Choose the temperature value to run the Metropolis algorithm for:
     // Set the temperature steps.
     vec T_schedule = vec("1.0 2.4");
@@ -175,9 +175,9 @@ void run_4d_most_likely_state(){
         std::string stringT = streamObj3.str();
 
         // Make the Ising solver object (random 20x20 spin matrix):
-        IsingSolver isingSolver20x20(L, T, N_MC); // Generates a random LxL spin state.
-        //imat spin_mat(L, L, fill::ones);
-        //IsingSolver isingSolver20x20(spin_mat, T, N_MC);
+        //IsingSolver isingSolver20x20(L, T, N_MC); // Generates a random LxL spin state.
+        imat spin_mat(L, L, fill::ones);
+        IsingSolver isingSolver20x20(spin_mat, T, N_MC);
 
         // Run the metropolis algorithm, and for each MC cycle, calculate mean values
         // and add them to a list. Then save the lists for plotting.
@@ -239,9 +239,9 @@ void run_4f(){
     cout << "The number of processors available = " << omp_get_num_procs ( ) << endl;
     
     // Set the temperature steps.
-    double Tstart = 2.20;
-    double Tend = 2.35;
-    double Tsteps = 32;
+    double Tstart = 2.3;
+    double Tend = 2.375;
+    double Tsteps = 4;
     double T_step_length = (Tend - Tstart)/Tsteps;
 
     // Make data into strings.
@@ -264,11 +264,14 @@ void run_4f(){
     std::string stringTend = streamObj.str();
 
     // Temperature vector.
+    int j = 0;
     vector<double> T_schedule;
     for (double i = Tstart; i <= Tend; i+= T_step_length){
         T_schedule.push_back(i);
+        cout << "The temperature schedule is: "<< T_schedule[j] << endl;
+        j++;
     }
-
+    
     // Start timing.
     double wtime = omp_get_wtime();
 
@@ -293,14 +296,14 @@ void run_4f(){
             IsingSolver isingSolver(L, T, N_MC);
             
             // Begin equilibrium cycles
-            for (int n=1; n<=int(N_MC*0.1); n++){ 
+            for (int n=1; n<=int(N_MC*0.2); n++){ 
                 isingSolver.metropolis_one_time_parallel();
             }  
             // Clear data.
             isingSolver.init_parallel_variables();
             
             // Begin recording real data.
-            for (int n=int(N_MC*0.1); n<=N_MC; n++){ 
+            for (int n=int(N_MC*0.2); n<=N_MC; n++){ 
                 isingSolver.metropolis_one_time_parallel();
             }  
             mean_value_results(i, 0) = T;

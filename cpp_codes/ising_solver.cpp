@@ -574,7 +574,7 @@ Row<double> IsingSolver::get_mean_results_parallel(){
 
     // The norm will take into account the equil steps. 
     double N_MCdouble = double(N_MC);
-    double norm = 1/ (0.9*N_MCdouble);
+    double norm = 1/ (0.8*N_MCdouble);
     double E_mean = E_total*norm;
     double M_mean = M_total*norm;
     double E2_mean = E2_total*norm;

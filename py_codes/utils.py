@@ -361,28 +361,28 @@ def plot_4f_cpp():
             plt.xlabel("Temperature")
             plt.ylabel("Expectation Energy")
             plt.legend(loc="best")
-            plt.xlim(2.0, 2.3)
+            plt.xlim(2.0, 2.4)
             
             plt.subplot(222)
             plt.plot(T, M_mean, '.-', label="{}".format(L))
             plt.xlabel("Temperature")
             plt.ylabel("Expectation Magnetisation")
             plt.legend(loc="best")
-            plt.xlim(2.0, 2.3)
+            plt.xlim(2.0, 2.4)
             
             plt.subplot(223)
             plt.plot(T, CV, '.-', label="{}".format(L))
             plt.xlabel("Temperature")
             plt.ylabel("Heat Capacity")
             plt.legend(loc="best")
-            plt.xlim(2.0, 2.3)
+            plt.xlim(2.0, 2.4)
             
             plt.subplot(224)
             plt.plot(T, chi, '.-', label="{}".format(L))
             plt.xlabel("Temperature")
             plt.ylabel("Magnetic Susceptibility")
             plt.legend(loc="best")
-            plt.xlim(2.0, 2.3)
+            plt.xlim(2.0, 2.4)
             
             #f.suptitle("Expectation values for 100,000 Monte Carlo cycles for a 2x2 spin matrix. An additional 10% were added for equilibrium")
             f.tight_layout(pad=1.0)
@@ -393,7 +393,7 @@ def plot_4f_cpp():
 
 def calc_4g():
     
-    directory = "../results/4f/1 st run/"
+    directory = "../results/4f/"
     
     TC_list = np.zeros((4))
     L_list = np.zeros((4))
@@ -429,7 +429,7 @@ def calc_4g():
     print("L list is :", L_list)
     print("TC list is : ", TC_list)
     
-    x = L_list
+    x = 1/L_list
     y = TC_list
 
     A = np.vstack([x, np.ones(len(x))]).T
@@ -437,11 +437,13 @@ def calc_4g():
     print ("Gradient = {:.3f} and intercept = {:.3f}".format(m, c))
     
     f = plt.figure(figsize=(18, 10), dpi=80, facecolor='w', edgecolor='k')
-    plt.plot(x, y, '.', label='Original data',)
+    plt.plot(x, y, '.', label='$T_C  data$', markersize = 20)
     plt.plot(x, m*x + c, 'r', label='Fitted line')
     plt.legend()
     plt.xlabel("$L^{-1}$")
     plt.ylabel("$T_C$")
+    plt.title("Gradient = {:.4f} and intercept = {:.4f}".format(m, c))
+    
     
     plt.savefig(directory + "TC_in_limit.png")
     plt.savefig(directory + "TC_in_limit.pdf")
